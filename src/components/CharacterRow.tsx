@@ -80,7 +80,9 @@ export default function CharacterRow({ character }: { character: Character }) {
       <div className="row space-between">
         <div>
           <span className="card-title">{character.name}</span>
-          <span className="badge">{CHARACTER_TYPE_LABELS[character.type]}</span>
+          <span className={`badge type-${character.type}`}>
+            {CHARACTER_TYPE_LABELS[character.type]}
+          </span>
           {character.mood && (
             <span className={`badge mood-${character.mood}`}>
               {MOOD_DISPLAY[character.mood]}
@@ -88,7 +90,11 @@ export default function CharacterRow({ character }: { character: Character }) {
           )}
         </div>
         <div className="row">
-          <button type="button" className="small" onClick={() => setEditing(true)}>
+          <button
+            type="button"
+            className="ghost small"
+            onClick={() => setEditing(true)}
+          >
             Edit
           </button>
           <button

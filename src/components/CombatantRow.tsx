@@ -29,6 +29,13 @@ export default function CombatantRow({
 
   const hpRatio = character.maxHp > 0 ? character.currentHp / character.maxHp : 0;
   const isDown = character.currentHp <= 0;
+  const hpClass = isDown
+    ? "hp-critical"
+    : hpRatio > 0.5
+      ? "hp-healthy"
+      : hpRatio > 0.25
+        ? "hp-wounded"
+        : "hp-critical";
 
   return (
     <li className={`card combatant-row${isCurrentTurn ? " current-turn" : ""}${isDown ? " down" : ""}`}>
@@ -48,7 +55,9 @@ export default function CombatantRow({
             <span className="initiative-badge">{entry.initiative}</span>
           )}
           <span className="card-title">{character.name}</span>
-          <span className="badge">{CHARACTER_TYPE_LABELS[character.type]}</span>
+          <span className={`badge type-${character.type}`}>
+            {CHARACTER_TYPE_LABELS[character.type]}
+          </span>
           {character.ac !== null && <span className="badge">AC {character.ac}</span>}
         </div>
         <button
@@ -62,7 +71,7 @@ export default function CombatantRow({
 
       <div className="hp-bar-track">
         <div
-          className="hp-bar-fill"
+          className={`hp-bar-fill ${hpClass}`}
           style={{ width: `${Math.max(0, Math.min(1, hpRatio)) * 100}%` }}
         />
       </div>
