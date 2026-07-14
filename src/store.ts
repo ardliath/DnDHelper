@@ -87,9 +87,24 @@ interface State {
     data: Partial<Pick<Character, "name" | "type" | "maxHp" | "ac" | "notes">>,
   ) => void;
   deleteCharacter: (characterId: string) => void;
-  applyDamage: (encounterId: string, characterId: string, amount: number) => void;
-  applyHeal: (encounterId: string, characterId: string, amount: number) => void;
-  grantTempHp: (encounterId: string, characterId: string, amount: number) => void;
+  applyDamage: (
+    encounterId: string,
+    characterId: string,
+    amount: number,
+    source?: string,
+  ) => void;
+  applyHeal: (
+    encounterId: string,
+    characterId: string,
+    amount: number,
+    source?: string,
+  ) => void;
+  grantTempHp: (
+    encounterId: string,
+    characterId: string,
+    amount: number,
+    source?: string,
+  ) => void;
   clearTempHp: (characterId: string) => void;
   setMood: (characterId: string, label: MoodLabel, note: string) => void;
   /** Turn a one-off (temporary) combatant into a permanent roster character. */
@@ -274,7 +289,7 @@ export const useStore = create<State>()(
         }));
       },
 
-      applyDamage: (encounterId, characterId, amount) => {
+      applyDamage: (encounterId, characterId, amount, source) => {
         if (amount <= 0) return;
         const character = get().characters.find((c) => c.id === characterId);
         if (!character) return;
@@ -283,7 +298,10 @@ export const useStore = create<State>()(
         remaining = Math.max(0, remaining - character.tempHp);
         const currentHp = Math.max(0, character.currentHp - remaining);
         const justDown = currentHp <= 0 && character.currentHp > 0;
-        const text = `${character.name} took ${amount} damage (${character.currentHp} → ${currentHp} HP)${justDown ? " — down!" : ""}`;
+        const src = source?.trim();
+        const text = src
+          ? `${src} dealt ${amount} damage to ${character.name} (${character.currentHp} → ${currentHp} HP)${justDown ? " — down!" : ""}`
+          : `${character.name} took ${amount} damage (${character.currentHp} → ${currentHp} HP)${justDown ? " — down!" : ""}`;
         set((s) => ({
           characters: s.characters.map((c) =>
             c.id === characterId ? { ...c, tempHp, currentHp } : c,
@@ -294,12 +312,15 @@ export const useStore = create<State>()(
         }));
       },
 
-      applyHeal: (encounterId, characterId, amount) => {
+      applyHeal: (encounterId, characterId, amount, source) => {
         if (amount <= 0) return;
         const character = get().characters.find((c) => c.id === characterId);
         if (!character) return;
         const currentHp = Math.min(character.maxHp, character.currentHp + amount);
-        const text = `${character.name} healed ${amount} HP (${character.currentHp} → ${currentHp} HP)`;
+        const src = source?.trim();
+        const text = src
+          ? `${src} healed ${character.name} for ${amount} HP (${character.currentHp} → ${currentHp} HP)`
+          : `${character.name} healed ${amount} HP (${character.currentHp} → ${currentHp} HP)`;
         set((s) => ({
           characters: s.characters.map((c) =>
             c.id === characterId ? { ...c, currentHp } : c,
@@ -310,11 +331,15 @@ export const useStore = create<State>()(
         }));
       },
 
-      grantTempHp: (encounterId, characterId, amount) => {
+      grantTempHp: (encounterId, characterId, amount, source) => {
         if (amount <= 0) return;
         const character = get().characters.find((c) => c.id === characterId);
         if (!character) return;
         const tempHp = Math.max(character.tempHp, amount);
+        const src = source?.trim();
+        const text = src
+          ? `${src} granted ${character.name} ${amount} temporary HP (now ${tempHp}).`
+          : `${character.name} gained ${amount} temporary HP (now ${tempHp}).`;
         set((s) => ({
           characters: s.characters.map((c) =>
             c.id === characterId ? { ...c, tempHp } : c,
@@ -323,13 +348,7 @@ export const useStore = create<State>()(
             tempHp === character.tempHp
               ? s.encounters
               : s.encounters.map((e) =>
-                  e.id === encounterId
-                    ? appendEvent(
-                        e,
-                        "temp-hp",
-                        `${character.name} gained ${amount} temporary HP (now ${tempHp}).`,
-                      )
-                    : e,
+                  e.id === encounterId ? appendEvent(e, "temp-hp", text) : e,
                 ),
         }));
       },

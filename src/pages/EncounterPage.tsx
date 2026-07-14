@@ -53,6 +53,9 @@ export default function EncounterPage() {
     : rosterCharacters;
   const availableFromRoster = rosterPool.filter((c) => !participantIds.has(c.id));
   const entries = encounter.turnOrder.filter((t) => charactersById.has(t.characterId));
+  const currentActorName = isRun
+    ? charactersById.get(entries[encounter.currentTurnIndex]?.characterId)?.name
+    : undefined;
 
   const combatantsHeading = isCreate ? "Combatants" : "Turn order";
 
@@ -129,6 +132,7 @@ export default function EncounterPage() {
                 encounterId={encounterId}
                 isCurrentTurn={isRun && index === encounter.currentTurnIndex}
                 phase={phase}
+                actingCharacterName={currentActorName}
               />
             ))}
           </ul>

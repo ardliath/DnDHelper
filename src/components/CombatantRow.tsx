@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Character, EncounterStatus, TurnEntry } from "../types";
 import { CHARACTER_TYPE_LABELS } from "../constants";
 import { useStore } from "../store";
@@ -9,12 +9,15 @@ export default function CombatantRow({
   encounterId,
   isCurrentTurn,
   phase,
+  actingCharacterName,
 }: {
   entry: TurnEntry;
   character: Character;
   encounterId: string;
   isCurrentTurn: boolean;
   phase: EncounterStatus;
+  /** Whoever's turn it currently is, used to prefill "By" on HP actions. */
+  actingCharacterName?: string;
 }) {
   const applyDamage = useStore((s) => s.applyDamage);
   const applyHeal = useStore((s) => s.applyHeal);
@@ -27,6 +30,13 @@ export default function CombatantRow({
   const [damage, setDamage] = useState("");
   const [heal, setHeal] = useState("");
   const [temp, setTemp] = useState("");
+  const [source, setSource] = useState(actingCharacterName ?? "");
+
+  // Keep "By" pointed at whoever's turn it is as the fight progresses,
+  // unless the DM has typed something else in for this row.
+  useEffect(() => {
+    setSource(actingCharacterName ?? "");
+  }, [actingCharacterName]);
 
   const showInitiative = phase !== "create";
   const editableInitiative = phase === "prep" || phase === "run";
@@ -108,6 +118,14 @@ export default function CombatantRow({
       {showHpControls && (
         <div className="row wrap hp-controls">
           <input
+            type="text"
+            placeholder="By (optional)"
+            className="source-input"
+            title="Who dealt/granted this — shown in the log"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+          />
+          <input
             type="number"
             placeholder="Damage"
             value={damage}
@@ -117,7 +135,7 @@ export default function CombatantRow({
             type="button"
             className="danger small"
             onClick={() => {
-              applyDamage(encounterId, character.id, Number(damage) || 0);
+              applyDamage(encounterId, character.id, Number(damage) || 0, source);
               setDamage("");
             }}
           >
@@ -134,7 +152,7 @@ export default function CombatantRow({
             type="button"
             className="small"
             onClick={() => {
-              applyHeal(encounterId, character.id, Number(heal) || 0);
+              applyHeal(encounterId, character.id, Number(heal) || 0, source);
               setHeal("");
             }}
           >
@@ -151,7 +169,7 @@ export default function CombatantRow({
             type="button"
             className="small"
             onClick={() => {
-              grantTempHp(encounterId, character.id, Number(temp) || 0);
+              grantTempHp(encounterId, character.id, Number(temp) || 0, source);
               setTemp("");
             }}
           >

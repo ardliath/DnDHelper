@@ -442,6 +442,9 @@ a.card-title:hover {
 .hp-controls input {
   width: 74px;
 }
+.hp-controls input.source-input {
+  width: 120px;
+}
 
 /* --- Forms & buttons (drawn labels) -------------------------------------- */
 
