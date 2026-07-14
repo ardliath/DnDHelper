@@ -1,0 +1,264 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
+function CodeBlock({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="codeblock">
+      <button
+        type="button"
+        className="ghost small copy-btn"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          } catch {
+            /* clipboard unavailable; ignore */
+          }
+        }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+      <pre>
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+const CHARACTER_EXAMPLE = `{
+  "formatVersion": 1,
+  "kind": "character",
+  "character": {
+    "name": "Prophetess Ophelia",
+    "type": "rival",
+    "maxHp": 40,
+    "ac": 15,
+    "notes": "Leader of the rival party",
+    "mood": "unfriendly"
+  }
+}`;
+
+const ENCOUNTER_EXAMPLE = `{
+  "formatVersion": 1,
+  "kind": "encounter",
+  "encounter": {
+    "name": "The Gnashing Halls",
+    "combatants": [
+      { "name": "Aerin", "initiative": 18 },
+      { "name": "Grick", "type": "monster", "maxHp": 27, "ac": 14, "initiative": 10 }
+    ]
+  }
+}`;
+
+const SESSION_EXAMPLE = `{
+  "formatVersion": 1,
+  "kind": "session",
+  "session": {
+    "name": "Session 4: The Sunrise Steps",
+    "roster": [
+      { "name": "Prophetess Ophelia", "type": "rival", "maxHp": 40, "ac": 15, "mood": "unfriendly" }
+    ],
+    "encounters": [
+      {
+        "name": "Ambush at the Sunrise Steps",
+        "combatants": [
+          { "name": "Aerin", "initiative": 15 },
+          { "name": "Goblin Sharpshooter", "type": "monster", "maxHp": 7, "ac": 14, "initiative": 12 },
+          { "name": "Goblin Sharpshooter", "type": "monster", "maxHp": 7, "ac": 14, "initiative": 9 }
+        ]
+      }
+    ]
+  }
+}`;
+
+const AI_PROMPT = `You are designing a Dungeons & Dragons session for my "DnD Helper" app.
+Output ONLY a single JSON code block (no commentary) in exactly this shape:
+
+{
+  "formatVersion": 1,
+  "kind": "session",
+  "session": {
+    "name": "<session title>",
+    "roster": [
+      { "name": "<recurring NPC>", "type": "rival|monster|other", "maxHp": 0, "ac": 0, "mood": "hostile|unfriendly|neutral|friendly|allied" }
+    ],
+    "encounters": [
+      {
+        "name": "<encounter name>",
+        "combatants": [
+          { "name": "<one of my player characters>", "initiative": 0 },
+          { "name": "<monster>", "type": "monster", "maxHp": 0, "ac": 0, "initiative": 0 }
+        ]
+      }
+    ]
+  }
+}
+
+Rules:
+- My player characters are: <LIST YOUR PCs HERE>. Reference them by name only, with
+  no stat block — they already exist in my roster.
+- Every monster or NPC that is not one of my players MUST include a stat block with
+  at least "maxHp" (add "type" and "ac" too where you can).
+- For several identical monsters, list them separately with distinct names
+  (e.g. "Goblin 1", "Goblin 2").
+- "initiative" is optional — leave it out if I should roll at the table.
+- "roster" is optional; use it only for recurring named NPCs/rivals worth keeping.
+
+Now design: <DESCRIBE THE SESSION — theme, number of encounters, party level, difficulty>.`;
+
+export default function FormatsPage() {
+  return (
+    <div className="page prose">
+      <Link to="/" className="back-link">
+        ← Campaigns
+      </Link>
+      <h1>Import &amp; Export Formats</h1>
+
+      <p>
+        Everything in DnD Helper is plain JSON. You can export a character,
+        an encounter, a whole session, or an entire campaign to a{" "}
+        <code>.json</code> file, and import those files back into any campaign —
+        on this machine or another. This also means you can author content
+        elsewhere (by hand, or with an AI) and upload it.
+      </p>
+
+      <h2>How characters are matched</h2>
+      <p>
+        Combatants are referenced <strong>by name</strong>. When you import an
+        encounter or session:
+      </p>
+      <ul>
+        <li>
+          If a combatant&rsquo;s name matches a character already in the target
+          campaign&rsquo;s roster (your PCs, rivals), that character is reused.
+        </li>
+        <li>
+          Otherwise the combatant must include its own stat block (at least{" "}
+          <code>maxHp</code>). It becomes a <em>per-encounter combatant</em> —
+          its own instance with independent HP, just like a one-off you&rsquo;d
+          add during a fight. It is not added to the permanent roster.
+        </li>
+        <li>
+          A top-level <code>roster</code> list (on a session or campaign) adds
+          recurring named NPCs to the campaign roster. Names already present are
+          left untouched — imports only ever add, never overwrite or delete.
+        </li>
+      </ul>
+
+      <h2>Common fields</h2>
+      <p>
+        Every file has <code>"formatVersion": 1</code> and a <code>"kind"</code>{" "}
+        of <code>character</code>, <code>encounter</code>, <code>session</code>,
+        or <code>campaign</code>.
+      </p>
+      <table className="schema-table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>name</code>
+            </td>
+            <td>string</td>
+            <td>Required on characters, encounters, sessions, campaigns.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>type</code>
+            </td>
+            <td>enum</td>
+            <td>
+              <code>pc</code>, <code>rival</code>, <code>monster</code>, or{" "}
+              <code>other</code>. Required on roster characters; on a combatant
+              it defaults to <code>monster</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>maxHp</code>
+            </td>
+            <td>number &gt; 0</td>
+            <td>Required for any character defined by a stat block.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>ac</code>
+            </td>
+            <td>number / null</td>
+            <td>Optional armour class.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>notes</code>
+            </td>
+            <td>string</td>
+            <td>Optional freeform notes.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>mood</code>
+            </td>
+            <td>enum</td>
+            <td>
+              Rivals only: <code>hostile</code>, <code>unfriendly</code>,{" "}
+              <code>neutral</code>, <code>friendly</code>, <code>allied</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>initiative</code>
+            </td>
+            <td>number</td>
+            <td>Optional on a combatant; defaults to 0 if omitted.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Session</h2>
+      <p>
+        The main unit for authoring. A session has an optional <code>roster</code>{" "}
+        (recurring NPCs) and a list of <code>encounters</code>, each with{" "}
+        <code>combatants</code>. Import a session from a campaign page.
+      </p>
+      <CodeBlock code={SESSION_EXAMPLE} />
+
+      <h2>Encounter</h2>
+      <p>
+        A single encounter with its combatants. Import an encounter from a
+        session page — it&rsquo;s added to that session.
+      </p>
+      <CodeBlock code={ENCOUNTER_EXAMPLE} />
+
+      <h2>Character</h2>
+      <p>
+        A single roster character. Import a character from a campaign page — it
+        is added to that campaign&rsquo;s roster.
+      </p>
+      <CodeBlock code={CHARACTER_EXAMPLE} />
+
+      <h2>Campaign</h2>
+      <p>
+        A full campaign export bundles the roster plus every session and
+        encounter. Importing one creates a brand-new campaign. Note that exports
+        reset HP to full and don&rsquo;t preserve in-progress combat state
+        (current round / whose turn) — they capture your setup, not a live
+        fight.
+      </p>
+
+      <h2>Designing a session with an AI</h2>
+      <p>
+        Paste this prompt into your AI of choice, fill in the two{" "}
+        <code>&lt;...&gt;</code> placeholders, and import the JSON it returns via
+        &ldquo;Import a session&rdquo; on a campaign page.
+      </p>
+      <CodeBlock code={AI_PROMPT} />
+    </div>
+  );
+}

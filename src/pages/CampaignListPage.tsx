@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useStore } from "../store";
+import ImportPanel from "../components/ImportPanel";
+import { noPlan, planCampaignImport } from "../io/apply";
+import type { AnyFile } from "../io/formats";
 
 export default function CampaignListPage() {
   const campaigns = useStore((s) => s.campaigns);
@@ -16,9 +19,20 @@ export default function CampaignListPage() {
     setName("");
   }
 
+  function buildPlan(file: AnyFile) {
+    // Only "campaign" files reach here (ImportPanel enforces `accept`).
+    if (file.kind === "campaign") return planCampaignImport(file.campaign);
+    return noPlan("Unexpected file kind.");
+  }
+
   return (
     <div className="page">
-      <h1>Campaigns</h1>
+      <div className="row space-between">
+        <h1>Campaigns</h1>
+        <Link to="/formats" className="back-link">
+          Import / export formats →
+        </Link>
+      </div>
 
       <form className="row" onSubmit={handleCreate}>
         <input
@@ -54,6 +68,14 @@ export default function CampaignListPage() {
           ))}
         </ul>
       )}
+
+      <div className="io-bar">
+        <ImportPanel
+          label="Import a campaign…"
+          accept={["campaign"]}
+          buildPlan={buildPlan}
+        />
+      </div>
     </div>
   );
 }

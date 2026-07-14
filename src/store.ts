@@ -8,6 +8,7 @@ import type {
   MoodLabel,
   Session,
 } from "./types";
+import type { ImportPlan } from "./io/apply";
 
 function id(): string {
   return crypto.randomUUID();
@@ -99,6 +100,9 @@ interface State {
   nextTurn: (encounterId: string) => void;
   prevTurn: (encounterId: string) => void;
   endEncounter: (encounterId: string) => void;
+
+  // Import
+  commitImport: (plan: ImportPlan) => void;
 }
 
 export const useStore = create<State>()(
@@ -452,6 +456,15 @@ export const useStore = create<State>()(
           encounters: s.encounters.map((e) =>
             e.id === encounterId ? { ...e, status: "completed" } : e,
           ),
+        }));
+      },
+
+      commitImport: (plan) => {
+        set((s) => ({
+          campaigns: [...s.campaigns, ...plan.campaigns],
+          sessions: [...s.sessions, ...plan.sessions],
+          characters: [...s.characters, ...plan.characters],
+          encounters: [...s.encounters, ...plan.encounters],
         }));
       },
     }),

@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { Character } from "../types";
 import { CHARACTER_TYPE_LABELS, MOOD_DISPLAY, MOOD_LABELS } from "../constants";
 import { useStore } from "../store";
+import ExportButton from "./ExportButton";
+import { characterToFile } from "../io/exporters";
 
 export default function CharacterRow({ character }: { character: Character }) {
   const updateCharacter = useStore((s) => s.updateCharacter);
@@ -90,6 +92,10 @@ export default function CharacterRow({ character }: { character: Character }) {
           )}
         </div>
         <div className="row">
+          <ExportButton
+            filename={`character-${character.name}`}
+            build={() => characterToFile(character)}
+          />
           <button
             type="button"
             className="ghost small"

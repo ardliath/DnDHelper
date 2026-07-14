@@ -4,6 +4,16 @@ import { useStore } from "../store";
 import { CHARACTER_TYPE_LABELS, CHARACTER_TYPE_ORDER } from "../constants";
 import CharacterRow from "../components/CharacterRow";
 import AddCharacterForm from "../components/AddCharacterForm";
+import ExportButton from "../components/ExportButton";
+import ImportPanel from "../components/ImportPanel";
+import {
+  noPlan,
+  planCharacterImport,
+  planSessionImport,
+} from "../io/apply";
+import { campaignToFile, sessionToFile } from "../io/exporters";
+import type { AnyFile } from "../io/formats";
+import type { Character, Encounter } from "../types";
 
 export default function CampaignPage() {
   const { campaignId } = useParams<{ campaignId: string }>();
@@ -18,6 +28,11 @@ export default function CampaignPage() {
   const sessions = useMemo(
     () => allSessions.filter((sess) => sess.campaignId === campaignId),
     [allSessions, campaignId],
+  );
+  const allEncounters = useStore((s) => s.encounters);
+  const charactersById = useMemo(
+    () => new Map(allCharacters.map((c) => [c.id, c])),
+    [allCharacters],
   );
   const addSession = useStore((s) => s.addSession);
   const deleteSession = useStore((s) => s.deleteSession);
@@ -34,6 +49,25 @@ export default function CampaignPage() {
     if (!trimmed || !campaignId) return;
     addSession(campaignId, trimmed);
     setSessionName("");
+  }
+
+  function currentRoster(): Character[] {
+    const state = useStore.getState();
+    return state.characters.filter(
+      (c) => c.campaignId === campaignId && !c.isTemporary,
+    );
+  }
+
+  function buildPlan(file: AnyFile) {
+    if (file.kind === "session")
+      return planSessionImport(currentRoster(), campaignId!, file.session);
+    if (file.kind === "character")
+      return planCharacterImport(currentRoster(), campaignId!, file.character);
+    return noPlan("Unexpected file kind.");
+  }
+
+  function encountersForSession(sessionId: string): Encounter[] {
+    return allEncounters.filter((e) => e.sessionId === sessionId);
   }
 
   return (
@@ -87,6 +121,16 @@ export default function CampaignPage() {
                 >
                   {sess.name}
                 </Link>
+                <ExportButton
+                  filename={`session-${sess.name}`}
+                  build={() =>
+                    sessionToFile(
+                      sess,
+                      encountersForSession(sess.id),
+                      charactersById,
+                    )
+                  }
+                />
                 <button
                   type="button"
                   className="danger small"
@@ -106,6 +150,40 @@ export default function CampaignPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section>
+        <h2>Import / Export</h2>
+        <div className="io-bar">
+          <ImportPanel
+            label="Import a session or character…"
+            accept={["session", "character"]}
+            buildPlan={buildPlan}
+          />
+          <ExportButton
+            className="ghost small"
+            label="Export whole campaign"
+            filename={`campaign-${campaign.name}`}
+            build={() => {
+              const encountersBySession = new Map(
+                sessions.map((sess) => [
+                  sess.id,
+                  encountersForSession(sess.id),
+                ]),
+              );
+              return campaignToFile(
+                campaign.name,
+                characters,
+                sessions,
+                encountersBySession,
+                charactersById,
+              );
+            }}
+          />
+          <Link to="/formats" className="back-link">
+            Format guide →
+          </Link>
+        </div>
       </section>
     </div>
   );
