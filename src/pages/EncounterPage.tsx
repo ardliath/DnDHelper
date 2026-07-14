@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useStore } from "../store";
 import AddFromRoster from "../components/AddFromRoster";
@@ -5,31 +6,37 @@ import AddOneOffForm from "../components/AddOneOffForm";
 import CombatantRow from "../components/CombatantRow";
 
 export default function EncounterPage() {
-  const { campaignId, encounterId } = useParams<{
+  const { campaignId, sessionId, encounterId } = useParams<{
     campaignId: string;
+    sessionId: string;
     encounterId: string;
   }>();
 
-  const campaign = useStore((s) => s.campaigns.find((c) => c.id === campaignId));
+  const session = useStore((s) => s.sessions.find((sess) => sess.id === sessionId));
   const encounter = useStore((s) => s.encounters.find((e) => e.id === encounterId));
-  const characters = useStore((s) => s.characters);
+  const allCharacters = useStore((s) => s.characters);
 
   const startEncounter = useStore((s) => s.startEncounter);
   const nextTurn = useStore((s) => s.nextTurn);
   const prevTurn = useStore((s) => s.prevTurn);
   const endEncounter = useStore((s) => s.endEncounter);
 
-  if (!campaignId || !encounterId || !campaign || !encounter) {
+  const rosterCharacters = useMemo(
+    () =>
+      allCharacters.filter((c) => c.campaignId === campaignId && !c.isTemporary),
+    [allCharacters, campaignId],
+  );
+  const charactersById = useMemo(
+    () => new Map(allCharacters.map((c) => [c.id, c])),
+    [allCharacters],
+  );
+
+  if (!campaignId || !sessionId || !encounterId || !session || !encounter) {
     return <Navigate to="/" replace />;
   }
 
-  const rosterCharacters = characters.filter(
-    (c) => c.campaignId === campaignId && !c.isTemporary,
-  );
   const participantIds = new Set(encounter.turnOrder.map((t) => t.characterId));
   const availableFromRoster = rosterCharacters.filter((c) => !participantIds.has(c.id));
-
-  const charactersById = new Map(characters.map((c) => [c.id, c]));
   const entries = encounter.turnOrder.filter((t) => charactersById.has(t.characterId));
 
   const isSetup = encounter.status === "setup";
@@ -38,8 +45,8 @@ export default function EncounterPage() {
 
   return (
     <div className="page">
-      <Link to={`/campaigns/${campaignId}`} className="back-link">
-        ← {campaign.name}
+      <Link to={`/campaigns/${campaignId}/sessions/${sessionId}`} className="back-link">
+        ← {session.name}
       </Link>
       <h1>{encounter.name}</h1>
       <div className="row">

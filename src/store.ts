@@ -6,6 +6,7 @@ import type {
   CharacterType,
   Encounter,
   MoodLabel,
+  Session,
 } from "./types";
 
 function id(): string {
@@ -38,6 +39,7 @@ function removeFromTurnOrder(e: Encounter, characterId: string): Encounter {
 
 interface State {
   campaigns: Campaign[];
+  sessions: Session[];
   characters: Character[];
   encounters: Encounter[];
 
@@ -45,6 +47,11 @@ interface State {
   addCampaign: (name: string) => Campaign;
   renameCampaign: (campaignId: string, name: string) => void;
   deleteCampaign: (campaignId: string) => void;
+
+  // Sessions
+  addSession: (campaignId: string, name: string) => Session;
+  renameSession: (sessionId: string, name: string) => void;
+  deleteSession: (sessionId: string) => void;
 
   // Characters (roster)
   addCharacter: (
@@ -70,7 +77,7 @@ interface State {
   setMood: (characterId: string, label: MoodLabel, note: string) => void;
 
   // Encounters
-  addEncounter: (campaignId: string, name: string) => Encounter;
+  addEncounter: (sessionId: string, name: string) => Encounter;
   deleteEncounter: (encounterId: string) => void;
   addParticipant: (
     encounterId: string,
@@ -98,6 +105,7 @@ export const useStore = create<State>()(
   persist(
     (set, get) => ({
       campaigns: [],
+      sessions: [],
       characters: [],
       encounters: [],
 
@@ -116,14 +124,56 @@ export const useStore = create<State>()(
       },
 
       deleteCampaign: (campaignId) => {
+        const sessionIds = get()
+          .sessions.filter((sess) => sess.campaignId === campaignId)
+          .map((sess) => sess.id);
         const encounterIds = get()
-          .encounters.filter((e) => e.campaignId === campaignId)
+          .encounters.filter((e) => sessionIds.includes(e.sessionId))
           .map((e) => e.id);
         set((s) => ({
           campaigns: s.campaigns.filter((c) => c.id !== campaignId),
+          sessions: s.sessions.filter((sess) => sess.campaignId !== campaignId),
           characters: s.characters.filter((c) => c.campaignId !== campaignId),
           encounters: s.encounters.filter(
             (e) => !encounterIds.includes(e.id),
+          ),
+        }));
+      },
+
+      addSession: (campaignId, name) => {
+        const session: Session = { id: id(), campaignId, name, createdAt: now() };
+        set((s) => ({ sessions: [...s.sessions, session] }));
+        return session;
+      },
+
+      renameSession: (sessionId, name) => {
+        set((s) => ({
+          sessions: s.sessions.map((sess) =>
+            sess.id === sessionId ? { ...sess, name } : sess,
+          ),
+        }));
+      },
+
+      deleteSession: (sessionId) => {
+        const encounterIds = get()
+          .encounters.filter((e) => e.sessionId === sessionId)
+          .map((e) => e.id);
+        const tempIds = new Set(
+          get()
+            .characters.filter((c) => c.isTemporary)
+            .map((c) => c.id),
+        );
+        const orphanedTempIds = get()
+          .encounters.filter((e) => encounterIds.includes(e.id))
+          .flatMap((e) => e.turnOrder.map((t) => t.characterId))
+          .filter((cid) => tempIds.has(cid));
+        set((s) => ({
+          sessions: s.sessions.filter((sess) => sess.id !== sessionId),
+          encounters: s.encounters.filter(
+            (e) => !encounterIds.includes(e.id),
+          ),
+          characters: s.characters.filter(
+            (c) => !orphanedTempIds.includes(c.id),
           ),
         }));
       },
@@ -234,10 +284,10 @@ export const useStore = create<State>()(
         }));
       },
 
-      addEncounter: (campaignId, name) => {
+      addEncounter: (sessionId, name) => {
         const encounter: Encounter = {
           id: id(),
-          campaignId,
+          sessionId,
           name,
           status: "setup",
           round: 1,
@@ -405,6 +455,43 @@ export const useStore = create<State>()(
         }));
       },
     }),
-    { name: "dnd-helper-storage" },
+    {
+      name: "dnd-helper-storage",
+      version: 2,
+      migrate: (persistedState, version) => {
+        const state = persistedState as {
+          campaigns?: Campaign[];
+          sessions?: Session[];
+          characters?: Character[];
+          encounters?: (Encounter & { campaignId?: string })[];
+        };
+        if (version < 2) {
+          // Encounters used to belong directly to a campaign. Fold each
+          // campaign's pre-existing encounters into a new "Session 1".
+          const sessionByCampaign = new Map<string, Session>();
+          const encounters = (state.encounters ?? []).map((e) => {
+            if (!e.campaignId) return e as Encounter;
+            let session = sessionByCampaign.get(e.campaignId);
+            if (!session) {
+              session = {
+                id: id(),
+                campaignId: e.campaignId,
+                name: "Session 1",
+                createdAt: e.createdAt,
+              };
+              sessionByCampaign.set(e.campaignId, session);
+            }
+            const { campaignId: _campaignId, ...rest } = e;
+            return { ...rest, sessionId: session.id };
+          });
+          state.sessions = [
+            ...(state.sessions ?? []),
+            ...sessionByCampaign.values(),
+          ];
+          state.encounters = encounters;
+        }
+        return state;
+      },
+    },
   ),
 );

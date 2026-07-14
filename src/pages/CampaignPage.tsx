@@ -9,31 +9,31 @@ export default function CampaignPage() {
   const { campaignId } = useParams<{ campaignId: string }>();
   const campaign = useStore((s) => s.campaigns.find((c) => c.id === campaignId));
   const allCharacters = useStore((s) => s.characters);
-  const allEncounters = useStore((s) => s.encounters);
+  const allSessions = useStore((s) => s.sessions);
   const characters = useMemo(
     () =>
       allCharacters.filter((c) => c.campaignId === campaignId && !c.isTemporary),
     [allCharacters, campaignId],
   );
-  const encounters = useMemo(
-    () => allEncounters.filter((e) => e.campaignId === campaignId),
-    [allEncounters, campaignId],
+  const sessions = useMemo(
+    () => allSessions.filter((sess) => sess.campaignId === campaignId),
+    [allSessions, campaignId],
   );
-  const addEncounter = useStore((s) => s.addEncounter);
-  const deleteEncounter = useStore((s) => s.deleteEncounter);
+  const addSession = useStore((s) => s.addSession);
+  const deleteSession = useStore((s) => s.deleteSession);
 
-  const [encounterName, setEncounterName] = useState("");
+  const [sessionName, setSessionName] = useState("");
 
   if (!campaignId || !campaign) {
     return <Navigate to="/" replace />;
   }
 
-  function handleCreateEncounter(e: React.FormEvent) {
+  function handleCreateSession(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = encounterName.trim();
+    const trimmed = sessionName.trim();
     if (!trimmed || !campaignId) return;
-    addEncounter(campaignId, trimmed);
-    setEncounterName("");
+    addSession(campaignId, trimmed);
+    setSessionName("");
   }
 
   return (
@@ -64,37 +64,39 @@ export default function CampaignPage() {
       </section>
 
       <section>
-        <h2>Encounters</h2>
-        <form className="row" onSubmit={handleCreateEncounter}>
+        <h2>Sessions</h2>
+        <form className="row" onSubmit={handleCreateSession}>
           <input
             type="text"
-            placeholder="New encounter name"
-            value={encounterName}
-            onChange={(e) => setEncounterName(e.target.value)}
+            placeholder="New session name"
+            value={sessionName}
+            onChange={(e) => setSessionName(e.target.value)}
           />
-          <button type="submit">Create encounter</button>
+          <button type="submit">Create session</button>
         </form>
 
-        {encounters.length === 0 ? (
-          <p className="empty">No encounters yet.</p>
+        {sessions.length === 0 ? (
+          <p className="empty">No sessions yet.</p>
         ) : (
           <ul className="card-list">
-            {encounters.map((enc) => (
-              <li className="card" key={enc.id}>
+            {sessions.map((sess) => (
+              <li className="card" key={sess.id}>
                 <Link
-                  to={`/campaigns/${campaignId}/encounters/${enc.id}`}
+                  to={`/campaigns/${campaignId}/sessions/${sess.id}`}
                   className="card-title"
                 >
-                  {enc.name}
+                  {sess.name}
                 </Link>
-                <span className="badge">{enc.status}</span>
-                {enc.status === "active" && <span>Round {enc.round}</span>}
                 <button
                   type="button"
                   className="danger small"
                   onClick={() => {
-                    if (confirm(`Delete encounter "${enc.name}"?`)) {
-                      deleteEncounter(enc.id);
+                    if (
+                      confirm(
+                        `Delete session "${sess.name}"? This removes its encounters too.`,
+                      )
+                    ) {
+                      deleteSession(sess.id);
                     }
                   }}
                 >

@@ -40,13 +40,20 @@ export interface TurnEntry {
 
 export interface Encounter {
   id: string;
-  campaignId: string;
+  sessionId: string;
   name: string;
   status: EncounterStatus;
   round: number;
   /** Index into the initiative-sorted turn order. */
   currentTurnIndex: number;
   turnOrder: TurnEntry[];
+  createdAt: string;
+}
+
+export interface Session {
+  id: string;
+  campaignId: string;
+  name: string;
   createdAt: string;
 }
 
