@@ -103,6 +103,7 @@ interface State {
   nextTurn: (encounterId: string) => void;
   prevTurn: (encounterId: string) => void;
   endEncounter: (encounterId: string) => void;
+  reopenEncounter: (encounterId: string) => void;
 
   // Encounter scene blocks
   addEncounterBlock: (
@@ -485,6 +486,14 @@ export const useStore = create<State>()(
         set((s) => ({
           encounters: s.encounters.map((e) =>
             e.id === encounterId ? { ...e, status: "completed" } : e,
+          ),
+        }));
+      },
+
+      reopenEncounter: (encounterId) => {
+        set((s) => ({
+          encounters: s.encounters.map((e) =>
+            e.id === encounterId ? { ...e, status: "active" } : e,
           ),
         }));
       },

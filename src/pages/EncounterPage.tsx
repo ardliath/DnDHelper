@@ -21,6 +21,7 @@ export default function EncounterPage() {
   const nextTurn = useStore((s) => s.nextTurn);
   const prevTurn = useStore((s) => s.prevTurn);
   const endEncounter = useStore((s) => s.endEncounter);
+  const reopenEncounter = useStore((s) => s.reopenEncounter);
 
   const rosterCharacters = useMemo(
     () =>
@@ -79,6 +80,14 @@ export default function EncounterPage() {
             onClick={() => startEncounter(encounterId)}
           >
             Start encounter
+          </button>
+        </div>
+      )}
+
+      {isCompleted && (
+        <div className="row turn-controls">
+          <button type="button" onClick={() => reopenEncounter(encounterId)}>
+            Reopen encounter
           </button>
         </div>
       )}
