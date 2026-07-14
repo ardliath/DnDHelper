@@ -117,14 +117,17 @@ export default function CombatantRow({
 
       {showHpControls && (
         <div className="row wrap hp-controls">
-          <input
-            type="text"
-            placeholder="By (optional)"
-            className="source-input"
-            title="Who dealt/granted this — shown in the log"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          />
+          <label className="source-field" title="Who dealt/granted this — shown in the log">
+            <span className="source-field-label">By</span>
+            <input
+              type="text"
+              placeholder="optional"
+              className="source-input"
+              autoComplete="off"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            />
+          </label>
           <input
             type="number"
             placeholder="Damage"

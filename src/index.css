@@ -442,8 +442,32 @@ a.card-title:hover {
 .hp-controls input {
   width: 74px;
 }
-.hp-controls input.source-input {
-  width: 120px;
+
+.source-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 10px;
+  border: 1px dashed var(--rule);
+  border-radius: 3px;
+  background: var(--parchment-inset);
+}
+.source-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.source-field input.source-input {
+  width: 110px;
+  border: none;
+  background: transparent;
+  padding: 3px 0;
+}
+.source-field input.source-input:focus {
+  box-shadow: none;
+  outline: none;
 }
 
 /* --- Forms & buttons (drawn labels) -------------------------------------- */
