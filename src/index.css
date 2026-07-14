@@ -1,56 +1,57 @@
 /* ===========================================================================
-   DnD Helper — "Netherdeep" theme
-   A dark, atmospheric DM's-tome look: deep abyssal teal, candlelight gold.
+   DnD Helper — "Pen & Parchment" theme
+   Aged paper, sepia ink, hand-drawn rules and flourishes. Soft and warm.
    =========================================================================== */
 
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap");
+
 :root {
-  /* Surfaces */
-  --bg: #0d1417;
-  --bg-2: #0a1013;
-  --surface: #141e22;
-  --surface-2: #1a262b;
-  --border: #26343a;
-  --border-strong: #35474f;
+  /* Parchment surfaces */
+  --parchment: #e9ddc3;
+  --parchment-light: #f2e9d4;
+  --parchment-dark: #ddcfad;
+  --parchment-inset: #e0d3b4;
 
-  /* Text */
-  --text: #dfe3e0;
-  --text-h: #f4f1e9;
-  --text-muted: #8ea0a3;
+  /* Ink */
+  --ink: #40342a;
+  --ink-soft: #6b5b49;
+  --ink-faint: #9a876d;
+  --rule: #c3ae86;
+  --rule-soft: #d3c1a0;
 
-  /* Accents */
-  --gold: #d9a441;
-  --gold-bright: #ecc069;
-  --gold-dim: rgba(217, 164, 65, 0.15);
-  --teal: #3fb0a8;
-  --teal-dim: rgba(63, 176, 168, 0.15);
+  /* Accents — muted like aged coloured ink */
+  --seal: #9c4234; /* red rubric / wax seal */
+  --seal-soft: #b56a5c;
+  --ink-teal: #4a7268;
+  --ink-green: #5f7a44;
+  --ink-ochre: #a5762f;
 
-  /* Semantic */
-  --danger: #c8493c;
-  --danger-bright: #e06557;
-  --hp-healthy: #4f9d5b;
-  --hp-wounded: #d9a441;
-  --hp-critical: #c8493c;
+  /* HP (muted coloured ink) */
+  --hp-healthy: #5f7a44;
+  --hp-wounded: #a5762f;
+  --hp-critical: #9c4234;
 
   /* Type badges */
-  --type-pc: #4aa3b8;
-  --type-rival: #d98a41;
-  --type-monster: #c8493c;
-  --type-other: #8ea0a3;
+  --type-pc: #4a7268;
+  --type-rival: #a5762f;
+  --type-monster: #9c4234;
+  --type-other: #6b5b49;
 
   /* Mood */
-  --mood-hostile: #c8493c;
-  --mood-unfriendly: #d98a41;
-  --mood-neutral: #8ea0a3;
-  --mood-friendly: #4aa3b8;
-  --mood-allied: #4f9d5b;
+  --mood-hostile: #9c4234;
+  --mood-unfriendly: #a5762f;
+  --mood-neutral: #6b5b49;
+  --mood-friendly: #4a7268;
+  --mood-allied: #5f7a44;
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+  --display: "Cinzel", "Trajan Pro", "Iowan Old Style", Palatino, Georgia,
+    serif;
+  --body: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino,
     Georgia, serif;
 
-  font: 16px/1.5 var(--sans);
-  color: var(--text);
-  color-scheme: dark;
+  font: 17px/1.55 var(--body);
+  color: var(--ink);
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -61,87 +62,113 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100vh;
+  color: var(--ink);
+  background-color: var(--parchment);
   background-image:
     radial-gradient(
-      1200px 600px at 50% -10%,
-      rgba(63, 176, 168, 0.08),
+      1100px 700px at 50% -5%,
+      rgba(255, 250, 235, 0.55),
       transparent 60%
     ),
     radial-gradient(
-      900px 500px at 100% 0%,
-      rgba(217, 164, 65, 0.05),
+      1000px 900px at 100% 110%,
+      rgba(120, 92, 55, 0.14),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 800px at 0% 100%,
+      rgba(120, 92, 55, 0.1),
       transparent 55%
     );
   background-attachment: fixed;
-  min-height: 100vh;
+}
+
+/* Fibrous paper grain overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/></svg>");
 }
 
 #root {
-  max-width: 880px;
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 24px 22px 96px;
+  padding: 26px 24px 96px;
 }
 
 /* --- Typography ---------------------------------------------------------- */
 
 h1 {
-  font-family: var(--serif);
-  font-size: 34px;
+  font-family: var(--display);
+  font-size: 33px;
   font-weight: 600;
-  letter-spacing: 0.2px;
-  color: var(--text-h);
-  margin: 10px 0 22px;
-  line-height: 1.15;
+  letter-spacing: 0.4px;
+  color: var(--ink);
+  margin: 8px 0 22px;
+  line-height: 1.2;
 }
 
 h2 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 22px;
   font-weight: 600;
-  color: var(--gold);
-  margin: 34px 0 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.3px;
+  color: var(--seal);
+  margin: 34px 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
   position: relative;
 }
 
+/* Hand-drawn pen flourish beneath section headings */
 h2::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -1px;
-  width: 56px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--gold), transparent);
+  bottom: -7px;
+  width: 172px;
+  height: 12px;
+  background-repeat: no-repeat;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='172' height='12'><path d='M2 7 C 34 2 54 11 92 6 S 150 2 170 7' fill='none' stroke='%239c4234' stroke-width='1.4' stroke-linecap='round'/></svg>");
 }
 
 h3 {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.12em;
   margin: 18px 0 10px;
 }
 
 a {
-  color: var(--gold);
+  color: var(--seal);
   text-decoration: none;
 }
 a:hover {
-  color: var(--gold-bright);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 .back-link {
   display: inline-block;
   margin-bottom: 10px;
-  font-size: 14px;
-  color: var(--text-muted);
-  transition: color 0.15s ease;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--ink-soft);
 }
 .back-link:hover {
-  color: var(--gold);
+  color: var(--seal);
 }
 
 /* --- Layout helpers ------------------------------------------------------ */
@@ -163,23 +190,23 @@ a:hover {
   justify-content: space-between;
 }
 .row.stats {
-  font-size: 13.5px;
-  color: var(--text-muted);
+  font-size: 15px;
+  color: var(--ink-soft);
   margin-top: 6px;
 }
 
 .turn-controls {
-  margin: 10px 0 18px;
+  margin: 12px 0 18px;
   flex-wrap: wrap;
 }
 
 .empty {
-  color: var(--text-muted);
+  color: var(--ink-soft);
   font-style: italic;
   margin: 10px 0;
 }
 
-/* --- Cards --------------------------------------------------------------- */
+/* --- Cards (aged paper panels, double-ruled frame) ----------------------- */
 
 .card-list {
   list-style: none;
@@ -187,83 +214,82 @@ a:hover {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .card {
-  background: linear-gradient(180deg, var(--surface), var(--bg-2));
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 13px 16px;
+  background: var(--parchment-light);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 14px 16px;
+  /* inset second hairline = drawn "chart" frame + soft warm shadow */
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.02) inset,
-    0 6px 18px -12px rgba(0, 0, 0, 0.7);
-  transition:
-    border-color 0.15s ease,
-    transform 0.15s ease;
+    inset 0 0 0 2px var(--parchment-light),
+    inset 0 0 0 3px rgba(155, 133, 96, 0.4),
+    2px 3px 6px -3px rgba(80, 60, 38, 0.35);
 }
 
-/* Only lift interactive list cards, not form cards */
 li.card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--ink-soft);
 }
 
 .card-title {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-h);
+  letter-spacing: 0.2px;
+  color: var(--ink);
   margin-right: 8px;
 }
 
 a.card-title:hover {
-  color: var(--gold);
+  color: var(--seal);
+  text-decoration: none;
 }
 
 .roster-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .notes {
-  font-size: 13.5px;
-  color: var(--text-muted);
+  font-size: 15px;
+  color: var(--ink-soft);
   margin: 8px 0 0;
-  padding-left: 10px;
-  border-left: 2px solid var(--border);
+  padding-left: 12px;
+  border-left: 2px solid var(--rule);
   font-style: italic;
 }
 
-/* --- Badges -------------------------------------------------------------- */
+/* --- Badges (ink stamps) ------------------------------------------------- */
 
 .badge {
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
+  font-family: var(--body);
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 3px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
   margin-right: 6px;
   white-space: nowrap;
 }
 
 .badge.type-pc {
   color: var(--type-pc);
-  border-color: color-mix(in srgb, var(--type-pc) 45%, transparent);
-  background: color-mix(in srgb, var(--type-pc) 12%, transparent);
+  border-color: color-mix(in srgb, var(--type-pc) 55%, transparent);
 }
 .badge.type-rival {
   color: var(--type-rival);
-  border-color: color-mix(in srgb, var(--type-rival) 45%, transparent);
-  background: color-mix(in srgb, var(--type-rival) 12%, transparent);
+  border-color: color-mix(in srgb, var(--type-rival) 55%, transparent);
 }
 .badge.type-monster {
   color: var(--type-monster);
-  border-color: color-mix(in srgb, var(--type-monster) 45%, transparent);
-  background: color-mix(in srgb, var(--type-monster) 12%, transparent);
+  border-color: color-mix(in srgb, var(--type-monster) 55%, transparent);
 }
 .badge.type-other {
   color: var(--type-other);
@@ -271,53 +297,53 @@ a.card-title:hover {
 
 .badge.mood-hostile {
   color: var(--mood-hostile);
-  border-color: color-mix(in srgb, var(--mood-hostile) 50%, transparent);
-  background: color-mix(in srgb, var(--mood-hostile) 14%, transparent);
+  border-color: color-mix(in srgb, var(--mood-hostile) 55%, transparent);
+  background: color-mix(in srgb, var(--mood-hostile) 8%, transparent);
 }
 .badge.mood-unfriendly {
   color: var(--mood-unfriendly);
-  border-color: color-mix(in srgb, var(--mood-unfriendly) 50%, transparent);
-  background: color-mix(in srgb, var(--mood-unfriendly) 14%, transparent);
+  border-color: color-mix(in srgb, var(--mood-unfriendly) 55%, transparent);
+  background: color-mix(in srgb, var(--mood-unfriendly) 8%, transparent);
 }
 .badge.mood-neutral {
   color: var(--mood-neutral);
-  border-color: color-mix(in srgb, var(--mood-neutral) 50%, transparent);
-  background: color-mix(in srgb, var(--mood-neutral) 14%, transparent);
+  border-color: color-mix(in srgb, var(--mood-neutral) 55%, transparent);
+  background: color-mix(in srgb, var(--mood-neutral) 8%, transparent);
 }
 .badge.mood-friendly {
   color: var(--mood-friendly);
-  border-color: color-mix(in srgb, var(--mood-friendly) 50%, transparent);
-  background: color-mix(in srgb, var(--mood-friendly) 14%, transparent);
+  border-color: color-mix(in srgb, var(--mood-friendly) 55%, transparent);
+  background: color-mix(in srgb, var(--mood-friendly) 8%, transparent);
 }
 .badge.mood-allied {
   color: var(--mood-allied);
-  border-color: color-mix(in srgb, var(--mood-allied) 50%, transparent);
-  background: color-mix(in srgb, var(--mood-allied) 14%, transparent);
+  border-color: color-mix(in srgb, var(--mood-allied) 55%, transparent);
+  background: color-mix(in srgb, var(--mood-allied) 8%, transparent);
 }
 
 /* --- Mood panel ---------------------------------------------------------- */
 
 .mood-panel {
-  margin-top: 10px;
-  border-top: 1px dashed var(--border);
-  padding-top: 10px;
+  margin-top: 12px;
+  border-top: 1px dashed var(--rule);
+  padding-top: 12px;
 }
 
 .mood-history {
   list-style: none;
   padding: 0 0 0 12px;
   margin: 10px 0 0;
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 14.5px;
+  color: var(--ink-soft);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  border-left: 2px solid var(--border);
+  gap: 7px;
+  border-left: 2px solid var(--rule);
 }
 
 .mood-history-date {
-  color: var(--text-muted);
-  opacity: 0.8;
+  font-style: italic;
+  opacity: 0.85;
 }
 
 /* --- Combatant / initiative --------------------------------------------- */
@@ -327,18 +353,27 @@ a.card-title:hover {
 }
 
 .combatant-row.current-turn {
-  border-color: var(--gold);
-  border-left-color: var(--gold);
+  border-color: var(--rule);
+  border-left-color: var(--seal);
+  background: var(--parchment-dark);
   box-shadow:
-    0 0 0 1px var(--gold) inset,
-    0 0 24px -6px rgba(217, 164, 65, 0.4);
+    inset 0 0 0 2px var(--parchment-dark),
+    inset 0 0 0 3px rgba(156, 66, 52, 0.35),
+    2px 3px 8px -3px rgba(80, 60, 38, 0.4);
+}
+
+.combatant-row.current-turn .card-title::before {
+  content: "❧ ";
+  color: var(--seal);
+  font-size: 15px;
 }
 
 .combatant-row.down {
-  opacity: 0.55;
-  filter: saturate(0.6);
+  opacity: 0.6;
+  filter: saturate(0.7);
 }
 
+/* Hand-inked initiative token */
 .initiative-badge {
   display: inline-flex;
   align-items: center;
@@ -346,57 +381,67 @@ a.card-title:hover {
   min-width: 34px;
   height: 34px;
   padding: 0 6px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: #2a1c05;
-  font-weight: 800;
-  font-size: 16px;
+  border-radius: 50%;
+  background: var(--parchment);
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 15px;
   margin-right: 10px;
-  box-shadow: 0 2px 8px -3px rgba(217, 164, 65, 0.6);
+  box-shadow: 1px 1px 0 rgba(64, 52, 42, 0.25);
 }
 
 .initiative-input {
-  width: 58px;
+  width: 56px;
   text-align: center;
   margin-right: 8px;
 }
 
-/* --- HP bar -------------------------------------------------------------- */
+/* --- HP meter ------------------------------------------------------------ */
 
 .hp-bar-track {
-  height: 8px;
-  border-radius: 999px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
+  height: 9px;
+  border-radius: 2px;
+  background: var(--parchment-inset);
+  border: 1px solid var(--rule);
   margin-top: 10px;
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(80, 60, 38, 0.18);
 }
 
 .hp-bar-fill {
   height: 100%;
-  border-radius: 999px;
   transition:
     width 0.25s ease,
     background 0.25s ease;
+  /* faint ink hatching over the colour */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(64, 52, 42, 0.14) 0,
+    rgba(64, 52, 42, 0.14) 1px,
+    transparent 1px,
+    transparent 5px
+  );
 }
 .hp-bar-fill.hp-healthy {
-  background: linear-gradient(90deg, #3d7d48, var(--hp-healthy));
+  background-color: var(--hp-healthy);
 }
 .hp-bar-fill.hp-wounded {
-  background: linear-gradient(90deg, #b5872f, var(--hp-wounded));
+  background-color: var(--hp-wounded);
 }
 .hp-bar-fill.hp-critical {
-  background: linear-gradient(90deg, #9c352b, var(--hp-critical));
+  background-color: var(--hp-critical);
 }
 
 .hp-controls {
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .hp-controls input {
-  width: 76px;
+  width: 74px;
 }
 
-/* --- Forms & buttons ----------------------------------------------------- */
+/* --- Forms & buttons (drawn labels) -------------------------------------- */
 
 input,
 select,
@@ -408,11 +453,11 @@ button {
 input,
 select,
 textarea {
-  color: var(--text);
-  background: var(--bg-2);
-  border: 1px solid var(--border-strong);
-  border-radius: 7px;
-  padding: 8px 11px;
+  color: var(--ink);
+  background: var(--parchment-light);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 7px 11px;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
@@ -420,15 +465,16 @@ textarea {
 
 input::placeholder,
 textarea::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 75%, transparent);
+  color: var(--ink-faint);
+  font-style: italic;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px var(--gold-dim);
+  border-color: var(--ink-soft);
+  box-shadow: 0 0 0 3px rgba(156, 66, 52, 0.12);
 }
 
 textarea {
@@ -436,59 +482,66 @@ textarea {
   resize: vertical;
 }
 
+/* Buttons look like hand-drawn, ink-outlined labels */
 button {
   cursor: pointer;
-  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: #2a1c05;
-  border: 1px solid var(--gold);
-  border-radius: 7px;
-  padding: 8px 14px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  background: var(--parchment-light);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  padding: 7px 14px;
+  font-family: var(--body);
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  box-shadow: 0 4px 12px -6px rgba(217, 164, 65, 0.55);
+  box-shadow: 1.5px 1.5px 0 rgba(64, 52, 42, 0.22);
   transition:
-    filter 0.15s ease,
-    transform 0.05s ease,
-    box-shadow 0.15s ease;
+    background 0.12s ease,
+    box-shadow 0.08s ease,
+    transform 0.08s ease;
 }
 
 button:hover {
-  filter: brightness(1.06);
+  background: var(--parchment-dark);
 }
 button:active {
-  transform: translateY(1px);
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 0 0 0 rgba(64, 52, 42, 0.22);
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
-  filter: grayscale(0.5);
   box-shadow: none;
+  border-color: var(--ink-soft);
 }
 
 button.ghost {
   background: transparent;
-  color: var(--text);
-  border-color: var(--border-strong);
+  border: 1px solid var(--rule);
+  border-style: dashed;
+  color: var(--ink-soft);
   box-shadow: none;
 }
 button.ghost:hover {
-  border-color: var(--gold);
-  color: var(--gold-bright);
+  border-color: var(--ink-soft);
+  color: var(--ink);
+  background: transparent;
 }
 
 button.danger {
-  background: linear-gradient(180deg, var(--danger-bright), var(--danger));
-  color: #fff;
-  border-color: var(--danger);
-  box-shadow: 0 4px 12px -6px rgba(200, 73, 60, 0.55);
+  color: var(--seal);
+  border-color: var(--seal);
+  background: transparent;
+}
+button.danger:hover {
+  background: color-mix(in srgb, var(--seal) 12%, transparent);
 }
 
 button.small {
-  padding: 5px 10px;
-  font-size: 12.5px;
-  font-weight: 600;
+  padding: 4px 10px;
+  font-size: 13px;
+  box-shadow: 1px 1px 0 rgba(64, 52, 42, 0.2);
 }
 
 /* Forms rendered as cards lay their controls out in a wrapping row */
