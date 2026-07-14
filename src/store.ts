@@ -6,6 +6,9 @@ import type {
   CharacterType,
   Encounter,
   EncounterBlockKind,
+  EncounterEvent,
+  EncounterEventKind,
+  EncounterStatus,
   MoodLabel,
   Session,
 } from "./types";
@@ -17,6 +20,18 @@ function id(): string {
 
 function now(): string {
   return new Date().toISOString();
+}
+
+/** Append a logged event to an encounter, stamped with its current round. */
+function appendEvent(
+  e: Encounter,
+  kind: EncounterEventKind,
+  text: string,
+): Encounter {
+  return {
+    ...e,
+    events: [...e.events, { id: id(), timestamp: now(), round: e.round, kind, text }],
+  };
 }
 
 /**
@@ -72,9 +87,9 @@ interface State {
     data: Partial<Pick<Character, "name" | "type" | "maxHp" | "ac" | "notes">>,
   ) => void;
   deleteCharacter: (characterId: string) => void;
-  applyDamage: (characterId: string, amount: number) => void;
-  applyHeal: (characterId: string, amount: number) => void;
-  grantTempHp: (characterId: string, amount: number) => void;
+  applyDamage: (encounterId: string, characterId: string, amount: number) => void;
+  applyHeal: (encounterId: string, characterId: string, amount: number) => void;
+  grantTempHp: (encounterId: string, characterId: string, amount: number) => void;
   clearTempHp: (characterId: string) => void;
   setMood: (characterId: string, label: MoodLabel, note: string) => void;
   /** Turn a one-off (temporary) combatant into a permanent roster character. */
@@ -104,10 +119,15 @@ interface State {
     characterId: string,
     initiative: number,
   ) => void;
+  /** create -> prep */
+  advanceToPrep: (encounterId: string) => void;
+  /** prep -> run */
   startEncounter: (encounterId: string) => void;
   nextTurn: (encounterId: string) => void;
   prevTurn: (encounterId: string) => void;
+  /** run -> closed */
   endEncounter: (encounterId: string) => void;
+  /** closed -> run */
   reopenEncounter: (encounterId: string) => void;
 
   // Encounter scene blocks
@@ -254,39 +274,63 @@ export const useStore = create<State>()(
         }));
       },
 
-      applyDamage: (characterId, amount) => {
+      applyDamage: (encounterId, characterId, amount) => {
         if (amount <= 0) return;
-        set((s) => ({
-          characters: s.characters.map((c) => {
-            if (c.id !== characterId) return c;
-            let remaining = amount;
-            const tempHp = Math.max(0, c.tempHp - remaining);
-            remaining = Math.max(0, remaining - c.tempHp);
-            const currentHp = Math.max(0, c.currentHp - remaining);
-            return { ...c, tempHp, currentHp };
-          }),
-        }));
-      },
-
-      applyHeal: (characterId, amount) => {
-        if (amount <= 0) return;
+        const character = get().characters.find((c) => c.id === characterId);
+        if (!character) return;
+        let remaining = amount;
+        const tempHp = Math.max(0, character.tempHp - remaining);
+        remaining = Math.max(0, remaining - character.tempHp);
+        const currentHp = Math.max(0, character.currentHp - remaining);
+        const justDown = currentHp <= 0 && character.currentHp > 0;
+        const text = `${character.name} took ${amount} damage (${character.currentHp} → ${currentHp} HP)${justDown ? " — down!" : ""}`;
         set((s) => ({
           characters: s.characters.map((c) =>
-            c.id === characterId
-              ? { ...c, currentHp: Math.min(c.maxHp, c.currentHp + amount) }
-              : c,
+            c.id === characterId ? { ...c, tempHp, currentHp } : c,
+          ),
+          encounters: s.encounters.map((e) =>
+            e.id === encounterId ? appendEvent(e, "damage", text) : e,
           ),
         }));
       },
 
-      grantTempHp: (characterId, amount) => {
+      applyHeal: (encounterId, characterId, amount) => {
         if (amount <= 0) return;
+        const character = get().characters.find((c) => c.id === characterId);
+        if (!character) return;
+        const currentHp = Math.min(character.maxHp, character.currentHp + amount);
+        const text = `${character.name} healed ${amount} HP (${character.currentHp} → ${currentHp} HP)`;
         set((s) => ({
           characters: s.characters.map((c) =>
-            c.id === characterId
-              ? { ...c, tempHp: Math.max(c.tempHp, amount) }
-              : c,
+            c.id === characterId ? { ...c, currentHp } : c,
           ),
+          encounters: s.encounters.map((e) =>
+            e.id === encounterId ? appendEvent(e, "heal", text) : e,
+          ),
+        }));
+      },
+
+      grantTempHp: (encounterId, characterId, amount) => {
+        if (amount <= 0) return;
+        const character = get().characters.find((c) => c.id === characterId);
+        if (!character) return;
+        const tempHp = Math.max(character.tempHp, amount);
+        set((s) => ({
+          characters: s.characters.map((c) =>
+            c.id === characterId ? { ...c, tempHp } : c,
+          ),
+          encounters:
+            tempHp === character.tempHp
+              ? s.encounters
+              : s.encounters.map((e) =>
+                  e.id === encounterId
+                    ? appendEvent(
+                        e,
+                        "temp-hp",
+                        `${character.name} gained ${amount} temporary HP (now ${tempHp}).`,
+                      )
+                    : e,
+                ),
         }));
       },
 
@@ -328,11 +372,12 @@ export const useStore = create<State>()(
           id: id(),
           sessionId,
           name,
-          status: "setup",
+          status: "create",
           round: 1,
           currentTurnIndex: 0,
           turnOrder: [],
           blocks: [],
+          events: [],
           createdAt: now(),
         };
         set((s) => ({ encounters: [...s.encounters, encounter] }));
@@ -465,21 +510,31 @@ export const useStore = create<State>()(
         }));
       },
 
-      startEncounter: (encounterId) => {
+      advanceToPrep: (encounterId) => {
         set((s) => ({
           encounters: s.encounters.map((e) =>
-            e.id === encounterId
-              ? {
-                  ...e,
-                  status: "active",
-                  round: 1,
-                  currentTurnIndex: 0,
-                  turnOrder: [...e.turnOrder].sort(
-                    (a, b) => b.initiative - a.initiative,
-                  ),
-                }
+            e.id === encounterId && e.status === "create"
+              ? { ...e, status: "prep" }
               : e,
           ),
+        }));
+      },
+
+      startEncounter: (encounterId) => {
+        set((s) => ({
+          encounters: s.encounters.map((e) => {
+            if (e.id !== encounterId || e.status !== "prep") return e;
+            const started: Encounter = {
+              ...e,
+              status: "run",
+              round: 1,
+              currentTurnIndex: 0,
+              turnOrder: [...e.turnOrder].sort(
+                (a, b) => b.initiative - a.initiative,
+              ),
+            };
+            return appendEvent(started, "round", "Round 1 began.");
+          }),
         }));
       },
 
@@ -488,9 +543,15 @@ export const useStore = create<State>()(
           encounters: s.encounters.map((e) => {
             if (e.id !== encounterId || e.turnOrder.length === 0) return e;
             const atEnd = e.currentTurnIndex >= e.turnOrder.length - 1;
-            return atEnd
-              ? { ...e, currentTurnIndex: 0, round: e.round + 1 }
-              : { ...e, currentTurnIndex: e.currentTurnIndex + 1 };
+            if (!atEnd) {
+              return { ...e, currentTurnIndex: e.currentTurnIndex + 1 };
+            }
+            const round = e.round + 1;
+            return appendEvent(
+              { ...e, currentTurnIndex: 0, round },
+              "round",
+              `Round ${round} began.`,
+            );
           }),
         }));
       },
@@ -516,7 +577,9 @@ export const useStore = create<State>()(
       endEncounter: (encounterId) => {
         set((s) => ({
           encounters: s.encounters.map((e) =>
-            e.id === encounterId ? { ...e, status: "completed" } : e,
+            e.id === encounterId && e.status === "run"
+              ? { ...e, status: "closed" }
+              : e,
           ),
         }));
       },
@@ -524,7 +587,9 @@ export const useStore = create<State>()(
       reopenEncounter: (encounterId) => {
         set((s) => ({
           encounters: s.encounters.map((e) =>
-            e.id === encounterId ? { ...e, status: "active" } : e,
+            e.id === encounterId && e.status === "closed"
+              ? { ...e, status: "run" }
+              : e,
           ),
         }));
       },
@@ -595,13 +660,16 @@ export const useStore = create<State>()(
     }),
     {
       name: "dnd-helper-storage",
-      version: 3,
+      version: 4,
       migrate: (persistedState, version) => {
         const state = persistedState as {
           campaigns?: Campaign[];
           sessions?: Session[];
           characters?: Character[];
-          encounters?: (Encounter & { campaignId?: string })[];
+          encounters?: (Encounter & {
+            campaignId?: string;
+            status: string;
+          })[];
         };
         if (version < 2) {
           // Encounters used to belong directly to a campaign. Fold each
@@ -633,6 +701,22 @@ export const useStore = create<State>()(
           state.encounters = (state.encounters ?? []).map((e) => ({
             ...e,
             blocks: e.blocks ?? [],
+          }));
+        }
+        if (version < 4) {
+          // Encounter status went from 3 phases (setup/active/completed) to 4
+          // (create/prep/run/closed), and encounters gained an event log.
+          // "setup" is folded into "prep" since it's a strict superset
+          // (prep allows everything setup did, plus initiative editing).
+          const statusMap: Record<string, EncounterStatus> = {
+            setup: "prep",
+            active: "run",
+            completed: "closed",
+          };
+          state.encounters = (state.encounters ?? []).map((e) => ({
+            ...e,
+            status: statusMap[e.status] ?? (e.status as EncounterStatus),
+            events: (e.events as EncounterEvent[] | undefined) ?? [],
           }));
         }
         return state;

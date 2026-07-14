@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Character, TurnEntry } from "../types";
+import type { Character, EncounterStatus, TurnEntry } from "../types";
 import { CHARACTER_TYPE_LABELS } from "../constants";
 import { useStore } from "../store";
 
@@ -8,13 +8,13 @@ export default function CombatantRow({
   character,
   encounterId,
   isCurrentTurn,
-  editableInitiative,
+  phase,
 }: {
   entry: TurnEntry;
   character: Character;
   encounterId: string;
   isCurrentTurn: boolean;
-  editableInitiative: boolean;
+  phase: EncounterStatus;
 }) {
   const applyDamage = useStore((s) => s.applyDamage);
   const applyHeal = useStore((s) => s.applyHeal);
@@ -27,6 +27,11 @@ export default function CombatantRow({
   const [damage, setDamage] = useState("");
   const [heal, setHeal] = useState("");
   const [temp, setTemp] = useState("");
+
+  const showInitiative = phase !== "create";
+  const editableInitiative = phase === "prep" || phase === "run";
+  const showHpControls = phase === "run";
+  const showActions = phase !== "closed";
 
   const hpRatio = character.maxHp > 0 ? character.currentHp / character.maxHp : 0;
   const isDown = character.currentHp <= 0;
@@ -42,19 +47,20 @@ export default function CombatantRow({
     <li className={`card combatant-row${isCurrentTurn ? " current-turn" : ""}${isDown ? " down" : ""}`}>
       <div className="row space-between">
         <div>
-          {editableInitiative ? (
-            <input
-              type="number"
-              className="initiative-input"
-              value={entry.initiative}
-              onChange={(e) =>
-                setInitiative(encounterId, character.id, Number(e.target.value) || 0)
-              }
-              title="Initiative"
-            />
-          ) : (
-            <span className="initiative-badge">{entry.initiative}</span>
-          )}
+          {showInitiative &&
+            (editableInitiative ? (
+              <input
+                type="number"
+                className="initiative-input"
+                value={entry.initiative}
+                onChange={(e) =>
+                  setInitiative(encounterId, character.id, Number(e.target.value) || 0)
+                }
+                title="Initiative"
+              />
+            ) : (
+              <span className="initiative-badge">{entry.initiative}</span>
+            ))}
           <span className="card-title">{character.name}</span>
           <span className={`badge type-${character.type}`}>
             {CHARACTER_TYPE_LABELS[character.type]}
@@ -62,25 +68,27 @@ export default function CombatantRow({
           {character.isTemporary && <span className="badge">scene only</span>}
           {character.ac !== null && <span className="badge">AC {character.ac}</span>}
         </div>
-        <div className="row">
-          {character.isTemporary && (
+        {showActions && (
+          <div className="row">
+            {character.isTemporary && (
+              <button
+                type="button"
+                className="ghost small"
+                title="Keep this combatant in the campaign roster to reuse later"
+                onClick={() => promoteCharacter(character.id)}
+              >
+                Promote to roster
+              </button>
+            )}
             <button
               type="button"
-              className="ghost small"
-              title="Keep this combatant in the campaign roster to reuse later"
-              onClick={() => promoteCharacter(character.id)}
+              className="danger small"
+              onClick={() => removeParticipant(encounterId, character.id)}
             >
-              Promote to roster
+              Remove
             </button>
-          )}
-          <button
-            type="button"
-            className="danger small"
-            onClick={() => removeParticipant(encounterId, character.id)}
-          >
-            Remove
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="hp-bar-track">
@@ -97,63 +105,65 @@ export default function CombatantRow({
         </span>
       </div>
 
-      <div className="row wrap hp-controls">
-        <input
-          type="number"
-          placeholder="Damage"
-          value={damage}
-          onChange={(e) => setDamage(e.target.value)}
-        />
-        <button
-          type="button"
-          className="danger small"
-          onClick={() => {
-            applyDamage(character.id, Number(damage) || 0);
-            setDamage("");
-          }}
-        >
-          Apply damage
-        </button>
-
-        <input
-          type="number"
-          placeholder="Heal"
-          value={heal}
-          onChange={(e) => setHeal(e.target.value)}
-        />
-        <button
-          type="button"
-          className="small"
-          onClick={() => {
-            applyHeal(character.id, Number(heal) || 0);
-            setHeal("");
-          }}
-        >
-          Apply heal
-        </button>
-
-        <input
-          type="number"
-          placeholder="Temp HP"
-          value={temp}
-          onChange={(e) => setTemp(e.target.value)}
-        />
-        <button
-          type="button"
-          className="small"
-          onClick={() => {
-            grantTempHp(character.id, Number(temp) || 0);
-            setTemp("");
-          }}
-        >
-          Grant temp HP
-        </button>
-        {character.tempHp > 0 && (
-          <button type="button" className="ghost small" onClick={() => clearTempHp(character.id)}>
-            Clear temp HP
+      {showHpControls && (
+        <div className="row wrap hp-controls">
+          <input
+            type="number"
+            placeholder="Damage"
+            value={damage}
+            onChange={(e) => setDamage(e.target.value)}
+          />
+          <button
+            type="button"
+            className="danger small"
+            onClick={() => {
+              applyDamage(encounterId, character.id, Number(damage) || 0);
+              setDamage("");
+            }}
+          >
+            Apply damage
           </button>
-        )}
-      </div>
+
+          <input
+            type="number"
+            placeholder="Heal"
+            value={heal}
+            onChange={(e) => setHeal(e.target.value)}
+          />
+          <button
+            type="button"
+            className="small"
+            onClick={() => {
+              applyHeal(encounterId, character.id, Number(heal) || 0);
+              setHeal("");
+            }}
+          >
+            Apply heal
+          </button>
+
+          <input
+            type="number"
+            placeholder="Temp HP"
+            value={temp}
+            onChange={(e) => setTemp(e.target.value)}
+          />
+          <button
+            type="button"
+            className="small"
+            onClick={() => {
+              grantTempHp(encounterId, character.id, Number(temp) || 0);
+              setTemp("");
+            }}
+          >
+            Grant temp HP
+          </button>
+          {character.tempHp > 0 && (
+            <button type="button" className="ghost small" onClick={() => clearTempHp(character.id)}>
+              Clear temp HP
+            </button>
+          )}
+        </div>
+      )}
     </li>
   );
 }

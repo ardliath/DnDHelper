@@ -94,8 +94,10 @@ export default function SessionPage() {
                   >
                     {enc.name}
                   </Link>
-                  <span className="badge">{enc.status}</span>
-                  {enc.status === "active" && <span>Round {enc.round}</span>}
+                  <span className={`badge phase-${enc.status}`}>{enc.status}</span>
+                  {(enc.status === "run" || enc.status === "closed") && (
+                    <span>Round {enc.round}</span>
+                  )}
                 </div>
                 <div className="row">
                   <button

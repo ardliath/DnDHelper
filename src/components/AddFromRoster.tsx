@@ -6,15 +6,19 @@ import { useStore } from "../store";
 export default function AddFromRoster({
   encounterId,
   available,
+  showInitiative = true,
+  emptyMessage = "All roster characters are already in this encounter.",
 }: {
   encounterId: string;
   available: Character[];
+  showInitiative?: boolean;
+  emptyMessage?: string;
 }) {
   const addParticipant = useStore((s) => s.addParticipant);
   const [initiatives, setInitiatives] = useState<Record<string, string>>({});
 
   if (available.length === 0) {
-    return <p className="empty">All roster characters are already in this encounter.</p>;
+    return <p className="empty">{emptyMessage}</p>;
   }
 
   return (
@@ -26,20 +30,26 @@ export default function AddFromRoster({
             <span className="badge">{CHARACTER_TYPE_LABELS[c.type]}</span>
           </div>
           <div className="row">
-            <input
-              type="number"
-              placeholder="Initiative"
-              className="initiative-input"
-              value={initiatives[c.id] ?? ""}
-              onChange={(e) =>
-                setInitiatives((prev) => ({ ...prev, [c.id]: e.target.value }))
-              }
-            />
+            {showInitiative && (
+              <input
+                type="number"
+                placeholder="Initiative"
+                className="initiative-input"
+                value={initiatives[c.id] ?? ""}
+                onChange={(e) =>
+                  setInitiatives((prev) => ({ ...prev, [c.id]: e.target.value }))
+                }
+              />
+            )}
             <button
               type="button"
               onClick={() => {
                 const value = Number(initiatives[c.id]);
-                addParticipant(encounterId, c.id, Number.isFinite(value) ? value : 0);
+                addParticipant(
+                  encounterId,
+                  c.id,
+                  showInitiative && Number.isFinite(value) ? value : 0,
+                );
                 setInitiatives((prev) => ({ ...prev, [c.id]: "" }));
               }}
             >

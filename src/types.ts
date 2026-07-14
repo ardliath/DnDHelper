@@ -31,7 +31,15 @@ export interface Character {
   moodHistory: MoodEvent[];
 }
 
-export type EncounterStatus = "setup" | "active" | "completed";
+/**
+ * The four phases an encounter moves through, strictly forward (the only
+ * reverse path is reopening a closed encounter back to "run"):
+ *  - create: build content — monsters/NPCs and scene text. No players, no initiative.
+ *  - prep:   bring in the players and set initiative for everyone.
+ *  - run:    live combat — turn order, HP, dice.
+ *  - closed: read-only recap. Can be reopened back to "run".
+ */
+export type EncounterStatus = "create" | "prep" | "run" | "closed";
 
 export interface TurnEntry {
   characterId: string;
@@ -47,6 +55,17 @@ export interface EncounterBlock {
   text: string;
 }
 
+/** A logged moment during "run", used to build the "closed" recap. */
+export type EncounterEventKind = "damage" | "heal" | "temp-hp" | "round";
+
+export interface EncounterEvent {
+  id: string;
+  timestamp: string;
+  round: number;
+  kind: EncounterEventKind;
+  text: string;
+}
+
 export interface Encounter {
   id: string;
   sessionId: string;
@@ -58,6 +77,8 @@ export interface Encounter {
   turnOrder: TurnEntry[];
   /** Ordered scene paragraphs (read-aloud text and DM notes). */
   blocks: EncounterBlock[];
+  /** Chronological log of what happened during "run", for the "closed" recap. */
+  events: EncounterEvent[];
   createdAt: string;
 }
 

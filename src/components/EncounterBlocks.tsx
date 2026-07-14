@@ -12,11 +12,13 @@ function BlockRow({
   encounterId,
   isFirst,
   isLast,
+  readOnly,
 }: {
   block: EncounterBlock;
   encounterId: string;
   isFirst: boolean;
   isLast: boolean;
+  readOnly: boolean;
 }) {
   const updateEncounterBlock = useStore((s) => s.updateEncounterBlock);
   const removeEncounterBlock = useStore((s) => s.removeEncounterBlock);
@@ -33,7 +35,7 @@ function BlockRow({
     setEditing(false);
   }
 
-  if (editing) {
+  if (editing && !readOnly) {
     return (
       <li className={`card scene-block block-${block.kind}`}>
         <div className="row wrap">
@@ -74,40 +76,42 @@ function BlockRow({
     <li className={`scene-block block-${block.kind}`}>
       <div className="row space-between scene-block-head">
         <span className="scene-block-label">{KIND_LABEL[block.kind]}</span>
-        <div className="row">
-          <button
-            type="button"
-            className="ghost small"
-            disabled={isFirst}
-            title="Move up"
-            onClick={() => moveEncounterBlock(encounterId, block.id, "up")}
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            className="ghost small"
-            disabled={isLast}
-            title="Move down"
-            onClick={() => moveEncounterBlock(encounterId, block.id, "down")}
-          >
-            ↓
-          </button>
-          <button
-            type="button"
-            className="ghost small"
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            className="danger small"
-            onClick={() => removeEncounterBlock(encounterId, block.id)}
-          >
-            Delete
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="row">
+            <button
+              type="button"
+              className="ghost small"
+              disabled={isFirst}
+              title="Move up"
+              onClick={() => moveEncounterBlock(encounterId, block.id, "up")}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="ghost small"
+              disabled={isLast}
+              title="Move down"
+              onClick={() => moveEncounterBlock(encounterId, block.id, "down")}
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              className="ghost small"
+              onClick={() => setEditing(true)}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="danger small"
+              onClick={() => removeEncounterBlock(encounterId, block.id)}
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
       <p className="scene-block-text">{block.text}</p>
     </li>
@@ -117,9 +121,11 @@ function BlockRow({
 export default function EncounterBlocks({
   encounterId,
   blocks,
+  readOnly = false,
 }: {
   encounterId: string;
   blocks: EncounterBlock[];
+  readOnly?: boolean;
 }) {
   const addEncounterBlock = useStore((s) => s.addEncounterBlock);
   const [adding, setAdding] = useState(false);
@@ -134,6 +140,8 @@ export default function EncounterBlocks({
     setAdding(false);
   }
 
+  if (readOnly && blocks.length === 0) return null;
+
   return (
     <section>
       <h2>Scene</h2>
@@ -147,50 +155,52 @@ export default function EncounterBlocks({
               encounterId={encounterId}
               isFirst={i === 0}
               isLast={i === blocks.length - 1}
+              readOnly={readOnly}
             />
           ))}
         </ul>
       )}
 
-      {adding ? (
-        <div className="card">
-          <div className="row wrap">
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as EncounterBlockKind)}
-            >
-              <option value="read-aloud">Read-aloud</option>
-              <option value="note">DM note</option>
-            </select>
+      {!readOnly &&
+        (adding ? (
+          <div className="card">
+            <div className="row wrap">
+              <select
+                value={kind}
+                onChange={(e) => setKind(e.target.value as EncounterBlockKind)}
+              >
+                <option value="read-aloud">Read-aloud</option>
+                <option value="note">DM note</option>
+              </select>
+            </div>
+            <textarea
+              rows={4}
+              placeholder="Paragraph text…"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              autoFocus
+            />
+            <div className="row">
+              <button type="button" onClick={add} disabled={text.trim() === ""}>
+                Add paragraph
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  setText("");
+                  setAdding(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-          <textarea
-            rows={4}
-            placeholder="Paragraph text…"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            autoFocus
-          />
-          <div className="row">
-            <button type="button" onClick={add} disabled={text.trim() === ""}>
-              Add paragraph
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                setText("");
-                setAdding(false);
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button type="button" onClick={() => setAdding(true)}>
-          + Add paragraph
-        </button>
-      )}
+        ) : (
+          <button type="button" onClick={() => setAdding(true)}>
+            + Add paragraph
+          </button>
+        ))}
     </section>
   );
 }

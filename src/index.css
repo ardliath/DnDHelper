@@ -760,3 +760,74 @@ code {
   color: var(--ink-soft);
   font-size: 15px;
 }
+
+/* --- Encounter phase badges ----------------------------------------------- */
+
+.badge.phase-create {
+  color: var(--ink-ochre);
+  border-color: color-mix(in srgb, var(--ink-ochre) 55%, transparent);
+  background: color-mix(in srgb, var(--ink-ochre) 8%, transparent);
+}
+.badge.phase-prep {
+  color: var(--ink-teal);
+  border-color: color-mix(in srgb, var(--ink-teal) 55%, transparent);
+  background: color-mix(in srgb, var(--ink-teal) 8%, transparent);
+}
+.badge.phase-run {
+  color: var(--seal);
+  border-color: color-mix(in srgb, var(--seal) 55%, transparent);
+  background: color-mix(in srgb, var(--seal) 8%, transparent);
+}
+.badge.phase-closed {
+  color: var(--ink-green);
+  border-color: color-mix(in srgb, var(--ink-green) 55%, transparent);
+  background: color-mix(in srgb, var(--ink-green) 8%, transparent);
+}
+
+/* --- Encounter event log --------------------------------------------------- */
+
+.event-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-log-round {
+  margin: 10px 0 2px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--rule);
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.event-log-round:first-child {
+  margin-top: 0;
+}
+
+.event-log-entry {
+  font-size: 14.5px;
+  padding-left: 10px;
+  border-left: 2px solid var(--rule);
+  color: var(--ink);
+}
+.event-log-entry.event-damage {
+  border-left-color: var(--seal);
+}
+.event-log-entry.event-heal {
+  border-left-color: var(--ink-green);
+}
+.event-log-entry.event-temp-hp {
+  border-left-color: var(--ink-teal);
+}

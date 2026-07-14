@@ -109,7 +109,7 @@ function buildEncounter(
     id: id(),
     sessionId,
     name: spec.name,
-    status: "setup",
+    status: "create",
     round: 1,
     currentTurnIndex: 0,
     turnOrder: [],
@@ -118,6 +118,7 @@ function buildEncounter(
       kind: b.kind,
       text: b.text,
     })),
+    events: [],
     createdAt: now(),
   };
   for (const [i, cb] of (spec.combatants ?? []).entries()) {

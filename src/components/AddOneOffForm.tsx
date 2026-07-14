@@ -4,9 +4,11 @@ import { useStore } from "../store";
 export default function AddOneOffForm({
   encounterId,
   campaignId,
+  showInitiative = true,
 }: {
   encounterId: string;
   campaignId: string;
+  showInitiative?: boolean;
 }) {
   const addOneOffCombatant = useStore((s) => s.addOneOffCombatant);
   const [name, setName] = useState("");
@@ -22,7 +24,7 @@ export default function AddOneOffForm({
       name: trimmed,
       maxHp: Math.max(1, Number(maxHp) || 1),
       ac: ac.trim() === "" ? null : Number(ac),
-      initiative: Number(initiative) || 0,
+      initiative: showInitiative ? Number(initiative) || 0 : 0,
     });
     setName("");
     setMaxHp("10");
@@ -50,13 +52,15 @@ export default function AddOneOffForm({
         value={ac}
         onChange={(e) => setAc(e.target.value)}
       />
-      <input
-        type="number"
-        placeholder="Initiative"
-        className="initiative-input"
-        value={initiative}
-        onChange={(e) => setInitiative(e.target.value)}
-      />
+      {showInitiative && (
+        <input
+          type="number"
+          placeholder="Initiative"
+          className="initiative-input"
+          value={initiative}
+          onChange={(e) => setInitiative(e.target.value)}
+        />
+      )}
       <button type="submit">Add</button>
     </form>
   );

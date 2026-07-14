@@ -5,6 +5,7 @@ import AddFromRoster from "../components/AddFromRoster";
 import AddOneOffForm from "../components/AddOneOffForm";
 import CombatantRow from "../components/CombatantRow";
 import EncounterBlocks from "../components/EncounterBlocks";
+import EncounterEventLog from "../components/EncounterEventLog";
 
 export default function EncounterPage() {
   const { campaignId, sessionId, encounterId } = useParams<{
@@ -17,6 +18,7 @@ export default function EncounterPage() {
   const encounter = useStore((s) => s.encounters.find((e) => e.id === encounterId));
   const allCharacters = useStore((s) => s.characters);
 
+  const advanceToPrep = useStore((s) => s.advanceToPrep);
   const startEncounter = useStore((s) => s.startEncounter);
   const nextTurn = useStore((s) => s.nextTurn);
   const prevTurn = useStore((s) => s.prevTurn);
@@ -37,13 +39,22 @@ export default function EncounterPage() {
     return <Navigate to="/" replace />;
   }
 
+  const phase = encounter.status;
+  const isCreate = phase === "create";
+  const isPrep = phase === "prep";
+  const isRun = phase === "run";
+  const isClosed = phase === "closed";
+
   const participantIds = new Set(encounter.turnOrder.map((t) => t.characterId));
-  const availableFromRoster = rosterCharacters.filter((c) => !participantIds.has(c.id));
+  // Create is for content only — no players. Prep and Run allow any type,
+  // so a forgotten monster (or a player) can always be added later.
+  const rosterPool = isCreate
+    ? rosterCharacters.filter((c) => c.type !== "pc")
+    : rosterCharacters;
+  const availableFromRoster = rosterPool.filter((c) => !participantIds.has(c.id));
   const entries = encounter.turnOrder.filter((t) => charactersById.has(t.characterId));
 
-  const isSetup = encounter.status === "setup";
-  const isActive = encounter.status === "active";
-  const isCompleted = encounter.status === "completed";
+  const combatantsHeading = isCreate ? "Combatants" : "Turn order";
 
   return (
     <div className="page">
@@ -52,13 +63,37 @@ export default function EncounterPage() {
       </Link>
       <h1>{encounter.name}</h1>
       <div className="row">
-        <span className="badge">{encounter.status}</span>
-        {(isActive || isCompleted) && <span>Round {encounter.round}</span>}
+        <span className={`badge phase-${phase}`}>{phase}</span>
+        {(isRun || isClosed) && <span>Round {encounter.round}</span>}
       </div>
 
-      <EncounterBlocks encounterId={encounterId} blocks={encounter.blocks} />
+      <EncounterBlocks
+        encounterId={encounterId}
+        blocks={encounter.blocks}
+        readOnly={isClosed}
+      />
 
-      {isActive && (
+      {isCreate && (
+        <div className="row turn-controls">
+          <button type="button" onClick={() => advanceToPrep(encounterId)}>
+            Continue to Prep →
+          </button>
+        </div>
+      )}
+
+      {isPrep && (
+        <div className="row turn-controls">
+          <button
+            type="button"
+            disabled={entries.length === 0}
+            onClick={() => startEncounter(encounterId)}
+          >
+            Begin encounter →
+          </button>
+        </div>
+      )}
+
+      {isRun && (
         <div className="row turn-controls">
           <button type="button" onClick={() => prevTurn(encounterId)}>
             ← Previous turn
@@ -72,19 +107,7 @@ export default function EncounterPage() {
         </div>
       )}
 
-      {isSetup && (
-        <div className="row turn-controls">
-          <button
-            type="button"
-            disabled={entries.length === 0}
-            onClick={() => startEncounter(encounterId)}
-          >
-            Start encounter
-          </button>
-        </div>
-      )}
-
-      {isCompleted && (
+      {isClosed && (
         <div className="row turn-controls">
           <button type="button" onClick={() => reopenEncounter(encounterId)}>
             Reopen encounter
@@ -93,7 +116,7 @@ export default function EncounterPage() {
       )}
 
       <section>
-        <h2>Turn order</h2>
+        <h2>{combatantsHeading}</h2>
         {entries.length === 0 ? (
           <p className="empty">No combatants added yet.</p>
         ) : (
@@ -104,21 +127,40 @@ export default function EncounterPage() {
                 entry={entry}
                 character={charactersById.get(entry.characterId)!}
                 encounterId={encounterId}
-                isCurrentTurn={isActive && index === encounter.currentTurnIndex}
-                editableInitiative={!isCompleted}
+                isCurrentTurn={isRun && index === encounter.currentTurnIndex}
+                phase={phase}
               />
             ))}
           </ul>
         )}
       </section>
 
-      {!isCompleted && (
+      {!isClosed && (
         <section>
           <h2>Add combatants</h2>
           <h3>From roster</h3>
-          <AddFromRoster encounterId={encounterId} available={availableFromRoster} />
+          <AddFromRoster
+            encounterId={encounterId}
+            available={availableFromRoster}
+            showInitiative={!isCreate}
+          />
           <h3>One-off combatant</h3>
-          <AddOneOffForm encounterId={encounterId} campaignId={campaignId} />
+          <AddOneOffForm
+            encounterId={encounterId}
+            campaignId={campaignId}
+            showInitiative={!isCreate}
+          />
+        </section>
+      )}
+
+      {(isRun || isClosed) && (
+        <section>
+          <h2>{isClosed ? "Recap" : "Log"}</h2>
+          <EncounterEventLog
+            events={encounter.events}
+            collapsible={!isClosed}
+            defaultOpen={isClosed}
+          />
         </section>
       )}
     </div>
