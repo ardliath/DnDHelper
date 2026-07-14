@@ -16,6 +16,26 @@ function now(): string {
   return new Date().toISOString();
 }
 
+/**
+ * Remove a combatant from an encounter's turn order, keeping currentTurnIndex
+ * pointed at the same combatant (or the next one, if the current combatant is
+ * the one being removed).
+ */
+function removeFromTurnOrder(e: Encounter, characterId: string): Encounter {
+  const index = e.turnOrder.findIndex((t) => t.characterId === characterId);
+  if (index === -1) return e;
+
+  const turnOrder = e.turnOrder.filter((t) => t.characterId !== characterId);
+  let currentTurnIndex = e.currentTurnIndex;
+  if (index < currentTurnIndex) currentTurnIndex -= 1;
+  if (turnOrder.length === 0) {
+    currentTurnIndex = 0;
+  } else if (currentTurnIndex > turnOrder.length - 1) {
+    currentTurnIndex = turnOrder.length - 1;
+  }
+  return { ...e, turnOrder, currentTurnIndex };
+}
+
 interface State {
   campaigns: Campaign[];
   characters: Character[];
@@ -147,12 +167,9 @@ export const useStore = create<State>()(
       deleteCharacter: (characterId) => {
         set((s) => ({
           characters: s.characters.filter((c) => c.id !== characterId),
-          encounters: s.encounters.map((e) => ({
-            ...e,
-            turnOrder: e.turnOrder.filter(
-              (t) => t.characterId !== characterId,
-            ),
-          })),
+          encounters: s.encounters.map((e) =>
+            removeFromTurnOrder(e, characterId),
+          ),
         }));
       },
 
@@ -298,18 +315,21 @@ export const useStore = create<State>()(
       },
 
       removeParticipant: (encounterId, characterId) => {
-        set((s) => ({
-          encounters: s.encounters.map((e) =>
-            e.id === encounterId
-              ? {
-                  ...e,
-                  turnOrder: e.turnOrder.filter(
-                    (t) => t.characterId !== characterId,
-                  ),
-                }
-              : e,
-          ),
-        }));
+        set((s) => {
+          const encounters = s.encounters.map((e) =>
+            e.id === encounterId ? removeFromTurnOrder(e, characterId) : e,
+          );
+          // Clean up a one-off combatant that is no longer in any encounter.
+          const char = s.characters.find((c) => c.id === characterId);
+          const stillUsed = encounters.some((e) =>
+            e.turnOrder.some((t) => t.characterId === characterId),
+          );
+          const characters =
+            char?.isTemporary && !stillUsed
+              ? s.characters.filter((c) => c.id !== characterId)
+              : s.characters;
+          return { encounters, characters };
+        });
       },
 
       setInitiative: (encounterId, characterId, initiative) => {
