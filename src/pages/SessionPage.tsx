@@ -28,6 +28,7 @@ export default function SessionPage() {
   );
   const addEncounter = useStore((s) => s.addEncounter);
   const deleteEncounter = useStore((s) => s.deleteEncounter);
+  const moveEncounter = useStore((s) => s.moveEncounter);
 
   const [encounterName, setEncounterName] = useState("");
 
@@ -84,31 +85,53 @@ export default function SessionPage() {
           <p className="empty">No encounters yet.</p>
         ) : (
           <ul className="card-list">
-            {encounters.map((enc) => (
-              <li className="card" key={enc.id}>
-                <Link
-                  to={`/campaigns/${campaignId}/sessions/${sessionId}/encounters/${enc.id}`}
-                  className="card-title"
-                >
-                  {enc.name}
-                </Link>
-                <span className="badge">{enc.status}</span>
-                {enc.status === "active" && <span>Round {enc.round}</span>}
-                <ExportButton
-                  filename={`encounter-${enc.name}`}
-                  build={() => encounterToFile(enc, charactersById)}
-                />
-                <button
-                  type="button"
-                  className="danger small"
-                  onClick={() => {
-                    if (confirm(`Delete encounter "${enc.name}"?`)) {
-                      deleteEncounter(enc.id);
-                    }
-                  }}
-                >
-                  Delete
-                </button>
+            {encounters.map((enc, i) => (
+              <li className="card row space-between" key={enc.id}>
+                <div>
+                  <Link
+                    to={`/campaigns/${campaignId}/sessions/${sessionId}/encounters/${enc.id}`}
+                    className="card-title"
+                  >
+                    {enc.name}
+                  </Link>
+                  <span className="badge">{enc.status}</span>
+                  {enc.status === "active" && <span>Round {enc.round}</span>}
+                </div>
+                <div className="row">
+                  <button
+                    type="button"
+                    className="ghost small"
+                    disabled={i === 0}
+                    title="Move up"
+                    onClick={() => moveEncounter(sessionId, enc.id, "up")}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost small"
+                    disabled={i === encounters.length - 1}
+                    title="Move down"
+                    onClick={() => moveEncounter(sessionId, enc.id, "down")}
+                  >
+                    ↓
+                  </button>
+                  <ExportButton
+                    filename={`encounter-${enc.name}`}
+                    build={() => encounterToFile(enc, charactersById)}
+                  />
+                  <button
+                    type="button"
+                    className="danger small"
+                    onClick={() => {
+                      if (confirm(`Delete encounter "${enc.name}"?`)) {
+                        deleteEncounter(enc.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

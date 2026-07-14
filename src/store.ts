@@ -83,6 +83,11 @@ interface State {
   // Encounters
   addEncounter: (sessionId: string, name: string) => Encounter;
   deleteEncounter: (encounterId: string) => void;
+  moveEncounter: (
+    sessionId: string,
+    encounterId: string,
+    direction: "up" | "down",
+  ) => void;
   addParticipant: (
     encounterId: string,
     characterId: string,
@@ -351,6 +356,32 @@ export const useStore = create<State>()(
             (c) => !orphanedTempIds.includes(c.id),
           ),
         }));
+      },
+
+      moveEncounter: (sessionId, encounterId, direction) => {
+        set((s) => {
+          // Display order is the encounters' relative order within the
+          // global array (filtered per session), so reordering means
+          // swapping the two encounters' positions in that array.
+          const sessionIndices = s.encounters
+            .map((e, i) => (e.sessionId === sessionId ? i : -1))
+            .filter((i) => i !== -1);
+          const posInSession = sessionIndices.findIndex(
+            (i) => s.encounters[i].id === encounterId,
+          );
+          if (posInSession === -1) return s;
+          const targetPos =
+            direction === "up" ? posInSession - 1 : posInSession + 1;
+          if (targetPos < 0 || targetPos >= sessionIndices.length) return s;
+          const indexA = sessionIndices[posInSession];
+          const indexB = sessionIndices[targetPos];
+          const encounters = [...s.encounters];
+          [encounters[indexA], encounters[indexB]] = [
+            encounters[indexB],
+            encounters[indexA],
+          ];
+          return { encounters };
+        });
       },
 
       addParticipant: (encounterId, characterId, initiative) => {
