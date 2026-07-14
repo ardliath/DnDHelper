@@ -45,7 +45,12 @@ function encounterToSpec(
     if (!character) continue;
     combatants.push(combatantToSpec(character, entry.initiative));
   }
-  return { name: encounter.name, combatants };
+  const spec: EncounterSpec = { name: encounter.name };
+  if (encounter.blocks.length > 0) {
+    spec.blocks = encounter.blocks.map((b) => ({ kind: b.kind, text: b.text }));
+  }
+  spec.combatants = combatants;
+  return spec;
 }
 
 /** Non-temporary roster characters referenced by an encounter's turn order. */

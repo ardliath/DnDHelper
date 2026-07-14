@@ -45,6 +45,10 @@ const ENCOUNTER_EXAMPLE = `{
   "kind": "encounter",
   "encounter": {
     "name": "The Gnashing Halls",
+    "blocks": [
+      { "kind": "read-aloud", "text": "The corridor opens into a vaulted hall, its floor slick with something dark." },
+      { "kind": "note", "text": "The grick drops from the ceiling on the first round." }
+    ],
     "combatants": [
       { "name": "Aerin", "initiative": 18 },
       { "name": "Grick", "type": "monster", "maxHp": 27, "ac": 14, "initiative": 10 }
@@ -63,6 +67,9 @@ const SESSION_EXAMPLE = `{
     "encounters": [
       {
         "name": "Ambush at the Sunrise Steps",
+        "blocks": [
+          { "kind": "read-aloud", "text": "Dawn spills over the steps as crossbow bolts hiss from the rocks above." }
+        ],
         "combatants": [
           { "name": "Aerin", "initiative": 15 },
           { "name": "Goblin Sharpshooter", "type": "monster", "maxHp": 7, "ac": 14, "initiative": 12 },
@@ -87,6 +94,10 @@ Output ONLY a single JSON code block (no commentary) in exactly this shape:
     "encounters": [
       {
         "name": "<encounter name>",
+        "blocks": [
+          { "kind": "read-aloud", "text": "<narration to read to the players>" },
+          { "kind": "note", "text": "<private DM note or tactics>" }
+        ],
         "combatants": [
           { "name": "<one of my player characters>", "initiative": 0 },
           { "name": "<monster>", "type": "monster", "maxHp": 0, "ac": 0, "initiative": 0 }
@@ -97,6 +108,9 @@ Output ONLY a single JSON code block (no commentary) in exactly this shape:
 }
 
 Rules:
+- Use "blocks" for scene text: "read-aloud" for narration read to players,
+  "note" for private DM prep. Both are optional; add as many as you like.
+- An encounter can be pure scene-setting with "blocks" and no "combatants".
 - My player characters are: <LIST YOUR PCs HERE>. Reference them by name only, with
   no stat block — they already exist in my roster.
 - Every monster or NPC that is not one of my players MUST include a stat block with
@@ -231,8 +245,12 @@ export default function FormatsPage() {
 
       <h2>Encounter</h2>
       <p>
-        A single encounter with its combatants. Import an encounter from a
-        session page — it&rsquo;s added to that session.
+        A single encounter with its combatants and, optionally,{" "}
+        <code>blocks</code> — ordered scene paragraphs. Each block has a{" "}
+        <code>kind</code> of <code>read-aloud</code> (narration for players) or{" "}
+        <code>note</code> (private DM prep), and a <code>text</code> string. An
+        encounter can be pure scene-setting: blocks with no combatants. Import
+        an encounter from a session page — it&rsquo;s added to that session.
       </p>
       <CodeBlock code={ENCOUNTER_EXAMPLE} />
 

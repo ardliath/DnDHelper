@@ -38,6 +38,15 @@ export interface TurnEntry {
   initiative: number;
 }
 
+/** A paragraph of scene text: player-facing read-aloud, or a private DM note. */
+export type EncounterBlockKind = "read-aloud" | "note";
+
+export interface EncounterBlock {
+  id: string;
+  kind: EncounterBlockKind;
+  text: string;
+}
+
 export interface Encounter {
   id: string;
   sessionId: string;
@@ -47,6 +56,8 @@ export interface Encounter {
   /** Index into the initiative-sorted turn order. */
   currentTurnIndex: number;
   turnOrder: TurnEntry[];
+  /** Ordered scene paragraphs (read-aloud text and DM notes). */
+  blocks: EncounterBlock[];
   createdAt: string;
 }
 

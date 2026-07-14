@@ -5,6 +5,7 @@ import type {
   Character,
   CharacterType,
   Encounter,
+  EncounterBlockKind,
   MoodLabel,
   Session,
 } from "./types";
@@ -102,6 +103,24 @@ interface State {
   nextTurn: (encounterId: string) => void;
   prevTurn: (encounterId: string) => void;
   endEncounter: (encounterId: string) => void;
+
+  // Encounter scene blocks
+  addEncounterBlock: (
+    encounterId: string,
+    kind: EncounterBlockKind,
+    text: string,
+  ) => void;
+  updateEncounterBlock: (
+    encounterId: string,
+    blockId: string,
+    data: { kind?: EncounterBlockKind; text?: string },
+  ) => void;
+  removeEncounterBlock: (encounterId: string, blockId: string) => void;
+  moveEncounterBlock: (
+    encounterId: string,
+    blockId: string,
+    direction: "up" | "down",
+  ) => void;
 
   // Import
   commitImport: (plan: ImportPlan) => void;
@@ -307,6 +326,7 @@ export const useStore = create<State>()(
           round: 1,
           currentTurnIndex: 0,
           turnOrder: [],
+          blocks: [],
           createdAt: now(),
         };
         set((s) => ({ encounters: [...s.encounters, encounter] }));
@@ -469,6 +489,61 @@ export const useStore = create<State>()(
         }));
       },
 
+      addEncounterBlock: (encounterId, kind, text) => {
+        const trimmed = text.trim();
+        if (trimmed === "") return;
+        set((s) => ({
+          encounters: s.encounters.map((e) =>
+            e.id === encounterId
+              ? {
+                  ...e,
+                  blocks: [...e.blocks, { id: id(), kind, text: trimmed }],
+                }
+              : e,
+          ),
+        }));
+      },
+
+      updateEncounterBlock: (encounterId, blockId, data) => {
+        set((s) => ({
+          encounters: s.encounters.map((e) =>
+            e.id === encounterId
+              ? {
+                  ...e,
+                  blocks: e.blocks.map((b) =>
+                    b.id === blockId ? { ...b, ...data } : b,
+                  ),
+                }
+              : e,
+          ),
+        }));
+      },
+
+      removeEncounterBlock: (encounterId, blockId) => {
+        set((s) => ({
+          encounters: s.encounters.map((e) =>
+            e.id === encounterId
+              ? { ...e, blocks: e.blocks.filter((b) => b.id !== blockId) }
+              : e,
+          ),
+        }));
+      },
+
+      moveEncounterBlock: (encounterId, blockId, direction) => {
+        set((s) => ({
+          encounters: s.encounters.map((e) => {
+            if (e.id !== encounterId) return e;
+            const index = e.blocks.findIndex((b) => b.id === blockId);
+            if (index === -1) return e;
+            const target = direction === "up" ? index - 1 : index + 1;
+            if (target < 0 || target >= e.blocks.length) return e;
+            const blocks = [...e.blocks];
+            [blocks[index], blocks[target]] = [blocks[target], blocks[index]];
+            return { ...e, blocks };
+          }),
+        }));
+      },
+
       commitImport: (plan) => {
         set((s) => ({
           campaigns: [...s.campaigns, ...plan.campaigns],
@@ -480,7 +555,7 @@ export const useStore = create<State>()(
     }),
     {
       name: "dnd-helper-storage",
-      version: 2,
+      version: 3,
       migrate: (persistedState, version) => {
         const state = persistedState as {
           campaigns?: Campaign[];
@@ -512,6 +587,13 @@ export const useStore = create<State>()(
             ...sessionByCampaign.values(),
           ];
           state.encounters = encounters;
+        }
+        if (version < 3) {
+          // Encounters gained scene blocks (read-aloud text / DM notes).
+          state.encounters = (state.encounters ?? []).map((e) => ({
+            ...e,
+            blocks: e.blocks ?? [],
+          }));
         }
         return state;
       },

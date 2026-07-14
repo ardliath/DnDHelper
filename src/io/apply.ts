@@ -113,6 +113,11 @@ function buildEncounter(
     round: 1,
     currentTurnIndex: 0,
     turnOrder: [],
+    blocks: (spec.blocks ?? []).map((b) => ({
+      id: id(),
+      kind: b.kind,
+      text: b.text,
+    })),
     createdAt: now(),
   };
   for (const [i, cb] of (spec.combatants ?? []).entries()) {

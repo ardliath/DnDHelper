@@ -1,5 +1,11 @@
-import type { CharacterType, MoodLabel } from "../types";
+import type {
+  CharacterType,
+  EncounterBlockKind,
+  MoodLabel,
+} from "../types";
 import { CHARACTER_TYPE_ORDER, MOOD_LABELS } from "../constants";
+
+export const ENCOUNTER_BLOCK_KINDS: EncounterBlockKind[] = ["read-aloud", "note"];
 
 /**
  * On-disk JSON exchange formats for DnD Helper.
@@ -35,8 +41,14 @@ export interface CombatantSpec {
   notes?: string;
 }
 
+export interface BlockSpec {
+  kind: EncounterBlockKind;
+  text: string;
+}
+
 export interface EncounterSpec {
   name: string;
+  blocks?: BlockSpec[];
   combatants?: CombatantSpec[];
 }
 
@@ -168,6 +180,21 @@ function validateCombatantSpec(
   }
 }
 
+function validateBlockSpec(v: unknown, path: string, errors: string[]): void {
+  if (!isObject(v)) {
+    errors.push(`${path} must be an object.`);
+    return;
+  }
+  if (!ENCOUNTER_BLOCK_KINDS.includes(v.kind as EncounterBlockKind)) {
+    errors.push(
+      `${path}.kind must be one of: ${ENCOUNTER_BLOCK_KINDS.join(", ")}.`,
+    );
+  }
+  if (typeof v.text !== "string" || v.text.trim() === "") {
+    errors.push(`${path}.text is required and must be a non-empty string.`);
+  }
+}
+
 function validateEncounterSpec(
   v: unknown,
   path: string,
@@ -179,6 +206,15 @@ function validateEncounterSpec(
   }
   if (typeof v.name !== "string" || v.name.trim() === "") {
     errors.push(`${path}.name is required and must be a non-empty string.`);
+  }
+  if (v.blocks !== undefined) {
+    if (!Array.isArray(v.blocks)) {
+      errors.push(`${path}.blocks must be an array.`);
+    } else {
+      v.blocks.forEach((b, i) =>
+        validateBlockSpec(b, `${path}.blocks[${i}]`, errors),
+      );
+    }
   }
   if (v.combatants !== undefined) {
     if (!Array.isArray(v.combatants)) {

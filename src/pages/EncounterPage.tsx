@@ -4,6 +4,7 @@ import { useStore } from "../store";
 import AddFromRoster from "../components/AddFromRoster";
 import AddOneOffForm from "../components/AddOneOffForm";
 import CombatantRow from "../components/CombatantRow";
+import EncounterBlocks from "../components/EncounterBlocks";
 
 export default function EncounterPage() {
   const { campaignId, sessionId, encounterId } = useParams<{
@@ -53,6 +54,8 @@ export default function EncounterPage() {
         <span className="badge">{encounter.status}</span>
         {(isActive || isCompleted) && <span>Round {encounter.round}</span>}
       </div>
+
+      <EncounterBlocks encounterId={encounterId} blocks={encounter.blocks} />
 
       {isActive && (
         <div className="row turn-controls">
