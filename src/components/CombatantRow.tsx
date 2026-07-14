@@ -22,6 +22,7 @@ export default function CombatantRow({
   const clearTempHp = useStore((s) => s.clearTempHp);
   const removeParticipant = useStore((s) => s.removeParticipant);
   const setInitiative = useStore((s) => s.setInitiative);
+  const promoteCharacter = useStore((s) => s.promoteCharacter);
 
   const [damage, setDamage] = useState("");
   const [heal, setHeal] = useState("");
@@ -58,15 +59,28 @@ export default function CombatantRow({
           <span className={`badge type-${character.type}`}>
             {CHARACTER_TYPE_LABELS[character.type]}
           </span>
+          {character.isTemporary && <span className="badge">scene only</span>}
           {character.ac !== null && <span className="badge">AC {character.ac}</span>}
         </div>
-        <button
-          type="button"
-          className="danger small"
-          onClick={() => removeParticipant(encounterId, character.id)}
-        >
-          Remove
-        </button>
+        <div className="row">
+          {character.isTemporary && (
+            <button
+              type="button"
+              className="ghost small"
+              title="Keep this combatant in the campaign roster to reuse later"
+              onClick={() => promoteCharacter(character.id)}
+            >
+              Promote to roster
+            </button>
+          )}
+          <button
+            type="button"
+            className="danger small"
+            onClick={() => removeParticipant(encounterId, character.id)}
+          >
+            Remove
+          </button>
+        </div>
       </div>
 
       <div className="hp-bar-track">

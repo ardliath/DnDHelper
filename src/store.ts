@@ -76,6 +76,8 @@ interface State {
   grantTempHp: (characterId: string, amount: number) => void;
   clearTempHp: (characterId: string) => void;
   setMood: (characterId: string, label: MoodLabel, note: string) => void;
+  /** Turn a one-off (temporary) combatant into a permanent roster character. */
+  promoteCharacter: (characterId: string) => void;
 
   // Encounters
   addEncounter: (sessionId: string, name: string) => Encounter;
@@ -284,6 +286,14 @@ export const useStore = create<State>()(
                   ],
                 }
               : c,
+          ),
+        }));
+      },
+
+      promoteCharacter: (characterId) => {
+        set((s) => ({
+          characters: s.characters.map((c) =>
+            c.id === characterId ? { ...c, isTemporary: false } : c,
           ),
         }));
       },
