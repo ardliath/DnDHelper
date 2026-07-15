@@ -40,7 +40,8 @@ const CHARACTER_EXAMPLE = `{
     "attacks": 2,
     "toHit": "+7",
     "damage": "1d8+4 radiant",
-    "abilities": "Turn Undead (recharge 5-6): each undead within 30 ft must save or flee."
+    "abilities": "Turn Undead (recharge 5-6): each undead within 30 ft must save or flee.",
+    "avatar": "https://example.com/portraits/ophelia.jpg"
   }
 }`;
 
@@ -285,12 +286,25 @@ export default function FormatsPage() {
             <td>string</td>
             <td>Optional. Special abilities or traits, freeform.</td>
           </tr>
+          <tr>
+            <td>
+              <code>avatar</code>
+            </td>
+            <td>string</td>
+            <td>
+              Optional. A portrait — an <code>http(s)</code> image link. Roster
+              characters only (not combatants with an inline stat block).
+            </td>
+          </tr>
         </tbody>
       </table>
       <p>
         <code>attacks</code>, <code>toHit</code>, <code>damage</code>, and{" "}
         <code>abilities</code> are meant for monsters/NPCs you need to run in a
-        fight — the app doesn&rsquo;t show them for player characters.
+        fight — the app doesn&rsquo;t show them for player characters.{" "}
+        <code>avatar</code> works for any character, players included; in the
+        app itself you can also upload a photo directly, which gets stored as
+        a compressed thumbnail rather than a link.
       </p>
 
       <h2>Session</h2>

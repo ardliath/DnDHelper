@@ -3,6 +3,7 @@ import type { Character, EncounterStatus, TurnEntry } from "../types";
 import { CHARACTER_TYPE_LABELS } from "../constants";
 import { useStore } from "../store";
 import { formatCombatStatLine } from "../combatStats";
+import Avatar from "./Avatar";
 
 export default function CombatantRow({
   entry,
@@ -58,27 +59,30 @@ export default function CombatantRow({
   return (
     <li className={`card combatant-row${isCurrentTurn ? " current-turn" : ""}${isDown ? " down" : ""}`}>
       <div className="row space-between">
-        <div>
-          {showInitiative &&
-            (editableInitiative ? (
-              <input
-                type="number"
-                className="initiative-input"
-                value={entry.initiative}
-                onChange={(e) =>
-                  setInitiative(encounterId, character.id, Number(e.target.value) || 0)
-                }
-                title="Initiative"
-              />
-            ) : (
-              <span className="initiative-badge">{entry.initiative}</span>
-            ))}
-          <span className="card-title">{character.name}</span>
-          <span className={`badge type-${character.type}`}>
-            {CHARACTER_TYPE_LABELS[character.type]}
-          </span>
-          {character.isTemporary && <span className="badge">scene only</span>}
-          {character.ac !== null && <span className="badge">AC {character.ac}</span>}
+        <div className="row">
+          <Avatar name={character.name} avatar={character.avatar} size="sm" />
+          <div>
+            {showInitiative &&
+              (editableInitiative ? (
+                <input
+                  type="number"
+                  className="initiative-input"
+                  value={entry.initiative}
+                  onChange={(e) =>
+                    setInitiative(encounterId, character.id, Number(e.target.value) || 0)
+                  }
+                  title="Initiative"
+                />
+              ) : (
+                <span className="initiative-badge">{entry.initiative}</span>
+              ))}
+            <span className="card-title">{character.name}</span>
+            <span className={`badge type-${character.type}`}>
+              {CHARACTER_TYPE_LABELS[character.type]}
+            </span>
+            {character.isTemporary && <span className="badge">scene only</span>}
+            {character.ac !== null && <span className="badge">AC {character.ac}</span>}
+          </div>
         </div>
         {showActions && (
           <div className="row">

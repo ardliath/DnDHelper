@@ -3,6 +3,7 @@ import type { CharacterType } from "../types";
 import { CHARACTER_TYPE_LABELS, CHARACTER_TYPE_ORDER } from "../constants";
 import { useStore } from "../store";
 import CombatStatsFields from "./CombatStatsFields";
+import AvatarUpload from "./AvatarUpload";
 
 export default function AddCharacterForm({ campaignId }: { campaignId: string }) {
   const addCharacter = useStore((s) => s.addCharacter);
@@ -11,6 +12,7 @@ export default function AddCharacterForm({ campaignId }: { campaignId: string })
   const [type, setType] = useState<CharacterType>("pc");
   const [maxHp, setMaxHp] = useState("10");
   const [ac, setAc] = useState("");
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [showCombatStats, setShowCombatStats] = useState(false);
   const [attacks, setAttacks] = useState("");
   const [toHit, setToHit] = useState("");
@@ -21,6 +23,7 @@ export default function AddCharacterForm({ campaignId }: { campaignId: string })
     setName("");
     setMaxHp("10");
     setAc("");
+    setAvatar(null);
     setShowCombatStats(false);
     setAttacks("");
     setToHit("");
@@ -37,6 +40,7 @@ export default function AddCharacterForm({ campaignId }: { campaignId: string })
       name: trimmed,
       maxHp: Math.max(1, Number(maxHp) || 1),
       ac: ac.trim() === "" ? null : Number(ac),
+      avatar,
       ...(type !== "pc" && {
         attacks: attacks.trim() === "" ? null : Number(attacks),
         toHit,
@@ -85,6 +89,8 @@ export default function AddCharacterForm({ campaignId }: { campaignId: string })
           onChange={(e) => setAc(e.target.value)}
         />
       </div>
+
+      <AvatarUpload name={name || "?"} value={avatar} onChange={setAvatar} />
 
       {type !== "pc" && (
         <>

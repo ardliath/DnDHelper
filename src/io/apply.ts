@@ -78,6 +78,7 @@ function makeRosterCharacter(
     toHit: spec.toHit ?? "",
     damage: spec.damage ?? "",
     abilities: spec.abilities ?? "",
+    avatar: spec.avatar ?? null,
   };
 }
 
@@ -102,6 +103,7 @@ function makeTempCombatant(
     toHit: spec.toHit ?? "",
     damage: spec.damage ?? "",
     abilities: spec.abilities ?? "",
+    avatar: null,
   };
 }
 

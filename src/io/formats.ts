@@ -37,6 +37,8 @@ export interface CharacterSpec {
   damage?: string;
   /** Special abilities / traits, freeform. */
   abilities?: string;
+  /** A portrait — either a data URI or an http(s) link. Roster characters only. */
+  avatar?: string;
 }
 
 export interface CombatantSpec {
@@ -177,6 +179,9 @@ function validateCharacterSpec(
     !MOOD_LABELS.includes(v.mood as MoodLabel)
   ) {
     errors.push(`${path}.mood must be one of: ${MOOD_LABELS.join(", ")}.`);
+  }
+  if (v.avatar !== undefined && typeof v.avatar !== "string") {
+    errors.push(`${path}.avatar must be a string.`);
   }
   validateCombatStats(v, path, errors);
 }

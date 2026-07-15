@@ -98,6 +98,7 @@ interface State {
       toHit?: string;
       damage?: string;
       abilities?: string;
+      avatar?: string | null;
     },
   ) => Character;
   updateCharacter: (
@@ -114,6 +115,7 @@ interface State {
         | "toHit"
         | "damage"
         | "abilities"
+        | "avatar"
       >
     >,
   ) => void;
@@ -363,6 +365,7 @@ export const useStore = create<State>()(
           toHit: data.toHit ?? "",
           damage: data.damage ?? "",
           abilities: data.abilities ?? "",
+          avatar: data.avatar ?? null,
         };
         set((s) => ({ characters: [...s.characters, character] }));
         return character;
@@ -586,6 +589,7 @@ export const useStore = create<State>()(
           toHit: data.toHit ?? "",
           damage: data.damage ?? "",
           abilities: data.abilities ?? "",
+          avatar: null,
         };
         set((s) => ({
           characters: [...s.characters, character],
@@ -788,7 +792,7 @@ export const useStore = create<State>()(
     }),
     {
       name: "dnd-helper-storage",
-      version: 6,
+      version: 7,
       migrate: (persistedState, version) => {
         const state = persistedState as {
           campaigns?: Campaign[];
@@ -865,6 +869,13 @@ export const useStore = create<State>()(
             toHit: c.toHit ?? "",
             damage: c.damage ?? "",
             abilities: c.abilities ?? "",
+          }));
+        }
+        if (version < 7) {
+          // Characters gained an optional portrait.
+          state.characters = (state.characters ?? []).map((c) => ({
+            ...c,
+            avatar: c.avatar ?? null,
           }));
         }
         return state;

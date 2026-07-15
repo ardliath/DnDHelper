@@ -40,6 +40,8 @@ export interface Character {
   damage: string;
   /** Special abilities / traits, freeform. */
   abilities: string;
+  /** A small portrait — either a data URI (uploaded photo) or an http(s) link. */
+  avatar: string | null;
 }
 
 /**

@@ -36,6 +36,7 @@ function characterToSpec(c: Character): CharacterSpec {
   if (c.ac !== null) spec.ac = c.ac;
   if (c.notes) spec.notes = c.notes;
   if (c.type === "rival" && c.mood) spec.mood = c.mood;
+  if (c.avatar) spec.avatar = c.avatar;
   addCombatStats(spec, c);
   return spec;
 }

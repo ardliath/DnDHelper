@@ -4,6 +4,8 @@ import { CHARACTER_TYPE_LABELS, MOOD_DISPLAY, MOOD_LABELS } from "../constants";
 import { useStore } from "../store";
 import ExportButton from "./ExportButton";
 import CombatStatsFields from "./CombatStatsFields";
+import Avatar from "./Avatar";
+import AvatarUpload from "./AvatarUpload";
 import { characterToFile } from "../io/exporters";
 import { formatCombatStatLine } from "../combatStats";
 
@@ -17,6 +19,7 @@ export default function CharacterRow({ character }: { character: Character }) {
   const [maxHp, setMaxHp] = useState(String(character.maxHp));
   const [ac, setAc] = useState(character.ac === null ? "" : String(character.ac));
   const [notes, setNotes] = useState(character.notes);
+  const [avatar, setAvatar] = useState(character.avatar);
   const [attacks, setAttacks] = useState(
     character.attacks === null ? "" : String(character.attacks),
   );
@@ -39,6 +42,7 @@ export default function CharacterRow({ character }: { character: Character }) {
       maxHp: parsedMaxHp,
       ac: ac.trim() === "" ? null : Number(ac),
       notes,
+      avatar,
       ...(!isPc && {
         attacks: attacks.trim() === "" ? null : Number(attacks),
         toHit,
@@ -82,6 +86,7 @@ export default function CharacterRow({ character }: { character: Character }) {
           placeholder="Notes"
           rows={2}
         />
+        <AvatarUpload name={name || character.name} value={avatar} onChange={setAvatar} />
         {!isPc && (
           <CombatStatsFields
             attacks={attacks}
@@ -109,16 +114,19 @@ export default function CharacterRow({ character }: { character: Character }) {
   return (
     <li className="card character-row">
       <div className="row space-between">
-        <div>
-          <span className="card-title">{character.name}</span>
-          <span className={`badge type-${character.type}`}>
-            {CHARACTER_TYPE_LABELS[character.type]}
-          </span>
-          {character.mood && (
-            <span className={`badge mood-${character.mood}`}>
-              {MOOD_DISPLAY[character.mood]}
+        <div className="row">
+          <Avatar name={character.name} avatar={character.avatar} size="sm" />
+          <div>
+            <span className="card-title">{character.name}</span>
+            <span className={`badge type-${character.type}`}>
+              {CHARACTER_TYPE_LABELS[character.type]}
             </span>
-          )}
+            {character.mood && (
+              <span className={`badge mood-${character.mood}`}>
+                {MOOD_DISPLAY[character.mood]}
+              </span>
+            )}
+          </div>
         </div>
         <div className="row">
           <ExportButton
