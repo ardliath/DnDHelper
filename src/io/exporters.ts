@@ -16,6 +16,17 @@ function notesToSpec(notes: NoteBlock[]): BlockSpec[] | undefined {
   return notes.map((n) => ({ kind: n.kind, text: n.text }));
 }
 
+/** Quick-reference combat stats — shared shape between CharacterSpec and CombatantSpec. */
+function addCombatStats(
+  spec: { attacks?: number; toHit?: string; damage?: string; abilities?: string },
+  c: Character,
+): void {
+  if (c.attacks !== null) spec.attacks = c.attacks;
+  if (c.toHit) spec.toHit = c.toHit;
+  if (c.damage) spec.damage = c.damage;
+  if (c.abilities) spec.abilities = c.abilities;
+}
+
 function characterToSpec(c: Character): CharacterSpec {
   const spec: CharacterSpec = {
     name: c.name,
@@ -25,6 +36,7 @@ function characterToSpec(c: Character): CharacterSpec {
   if (c.ac !== null) spec.ac = c.ac;
   if (c.notes) spec.notes = c.notes;
   if (c.type === "rival" && c.mood) spec.mood = c.mood;
+  addCombatStats(spec, c);
   return spec;
 }
 
@@ -37,6 +49,7 @@ function combatantToSpec(c: Character, initiative: number): CombatantSpec {
     spec.maxHp = c.maxHp;
     if (c.ac !== null) spec.ac = c.ac;
     if (c.notes) spec.notes = c.notes;
+    addCombatStats(spec, c);
   }
   return spec;
 }

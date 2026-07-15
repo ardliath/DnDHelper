@@ -94,11 +94,28 @@ interface State {
       ac: number | null;
       notes?: string;
       isTemporary?: boolean;
+      attacks?: number | null;
+      toHit?: string;
+      damage?: string;
+      abilities?: string;
     },
   ) => Character;
   updateCharacter: (
     characterId: string,
-    data: Partial<Pick<Character, "name" | "type" | "maxHp" | "ac" | "notes">>,
+    data: Partial<
+      Pick<
+        Character,
+        | "name"
+        | "type"
+        | "maxHp"
+        | "ac"
+        | "notes"
+        | "attacks"
+        | "toHit"
+        | "damage"
+        | "abilities"
+      >
+    >,
   ) => void;
   deleteCharacter: (characterId: string) => void;
   applyDamage: (
@@ -140,7 +157,16 @@ interface State {
   addOneOffCombatant: (
     encounterId: string,
     campaignId: string,
-    data: { name: string; maxHp: number; ac: number | null; initiative: number },
+    data: {
+      name: string;
+      maxHp: number;
+      ac: number | null;
+      initiative: number;
+      attacks?: number | null;
+      toHit?: string;
+      damage?: string;
+      abilities?: string;
+    },
   ) => void;
   removeParticipant: (encounterId: string, characterId: string) => void;
   setInitiative: (
@@ -333,6 +359,10 @@ export const useStore = create<State>()(
           isTemporary: data.isTemporary ?? false,
           mood: data.type === "rival" ? "neutral" : null,
           moodHistory: [],
+          attacks: data.attacks ?? null,
+          toHit: data.toHit ?? "",
+          damage: data.damage ?? "",
+          abilities: data.abilities ?? "",
         };
         set((s) => ({ characters: [...s.characters, character] }));
         return character;
@@ -552,6 +582,10 @@ export const useStore = create<State>()(
           isTemporary: true,
           mood: null,
           moodHistory: [],
+          attacks: data.attacks ?? null,
+          toHit: data.toHit ?? "",
+          damage: data.damage ?? "",
+          abilities: data.abilities ?? "",
         };
         set((s) => ({
           characters: [...s.characters, character],
@@ -754,7 +788,7 @@ export const useStore = create<State>()(
     }),
     {
       name: "dnd-helper-storage",
-      version: 5,
+      version: 6,
       migrate: (persistedState, version) => {
         const state = persistedState as {
           campaigns?: Campaign[];
@@ -820,6 +854,17 @@ export const useStore = create<State>()(
           state.sessions = (state.sessions ?? []).map((sess) => ({
             ...sess,
             notes: sess.notes ?? [],
+          }));
+        }
+        if (version < 6) {
+          // Characters gained quick-reference combat stats for running
+          // fights (number of attacks, to-hit, damage, special abilities).
+          state.characters = (state.characters ?? []).map((c) => ({
+            ...c,
+            attacks: c.attacks ?? null,
+            toHit: c.toHit ?? "",
+            damage: c.damage ?? "",
+            abilities: c.abilities ?? "",
           }));
         }
         return state;

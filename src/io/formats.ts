@@ -29,6 +29,14 @@ export interface CharacterSpec {
   notes?: string;
   /** Only meaningful for type "rival". */
   mood?: MoodLabel;
+  /** Quick-reference combat stats, for running the creature in a fight. */
+  attacks?: number;
+  /** Free text, e.g. "+5". */
+  toHit?: string;
+  /** Free text, e.g. "1d8+3 slashing". */
+  damage?: string;
+  /** Special abilities / traits, freeform. */
+  abilities?: string;
 }
 
 export interface CombatantSpec {
@@ -39,6 +47,10 @@ export interface CombatantSpec {
   maxHp?: number;
   ac?: number | null;
   notes?: string;
+  attacks?: number;
+  toHit?: string;
+  damage?: string;
+  abilities?: string;
 }
 
 export interface BlockSpec {
@@ -100,6 +112,29 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+/** Shared combat-stat validation for both CharacterSpec and CombatantSpec. */
+function validateCombatStats(
+  v: Record<string, unknown>,
+  path: string,
+  errors: string[],
+): void {
+  if (
+    v.attacks !== undefined &&
+    (typeof v.attacks !== "number" || !Number.isFinite(v.attacks) || v.attacks <= 0)
+  ) {
+    errors.push(`${path}.attacks must be a number greater than 0.`);
+  }
+  if (v.toHit !== undefined && typeof v.toHit !== "string") {
+    errors.push(`${path}.toHit must be a string.`);
+  }
+  if (v.damage !== undefined && typeof v.damage !== "string") {
+    errors.push(`${path}.damage must be a string.`);
+  }
+  if (v.abilities !== undefined && typeof v.abilities !== "string") {
+    errors.push(`${path}.abilities must be a string.`);
+  }
+}
+
 function validateCharacterSpec(
   v: unknown,
   path: string,
@@ -143,6 +178,7 @@ function validateCharacterSpec(
   ) {
     errors.push(`${path}.mood must be one of: ${MOOD_LABELS.join(", ")}.`);
   }
+  validateCombatStats(v, path, errors);
 }
 
 function validateCombatantSpec(
@@ -180,6 +216,7 @@ function validateCombatantSpec(
   if (v.notes !== undefined && typeof v.notes !== "string") {
     errors.push(`${path}.notes must be a string.`);
   }
+  validateCombatStats(v, path, errors);
 }
 
 function validateBlockSpec(v: unknown, path: string, errors: string[]): void {

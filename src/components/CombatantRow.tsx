@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Character, EncounterStatus, TurnEntry } from "../types";
 import { CHARACTER_TYPE_LABELS } from "../constants";
 import { useStore } from "../store";
+import { formatCombatStatLine } from "../combatStats";
 
 export default function CombatantRow({
   entry,
@@ -45,6 +46,7 @@ export default function CombatantRow({
 
   const hpRatio = character.maxHp > 0 ? character.currentHp / character.maxHp : 0;
   const isDown = character.currentHp <= 0;
+  const statLine = character.type !== "pc" ? formatCombatStatLine(character) : null;
   const hpClass = isDown
     ? "hp-critical"
     : hpRatio > 0.5
@@ -114,6 +116,15 @@ export default function CombatantRow({
           {isDown ? " — Down" : ""}
         </span>
       </div>
+
+      {statLine && (
+        <div className="row stats combat-stat-line">
+          <span>⚔ {statLine}</span>
+        </div>
+      )}
+      {character.type !== "pc" && character.abilities && (
+        <p className="abilities-text">{character.abilities}</p>
+      )}
 
       {showHpControls && (
         <div className="row wrap hp-controls">

@@ -36,7 +36,11 @@ const CHARACTER_EXAMPLE = `{
     "maxHp": 40,
     "ac": 15,
     "notes": "Leader of the rival party",
-    "mood": "unfriendly"
+    "mood": "unfriendly",
+    "attacks": 2,
+    "toHit": "+7",
+    "damage": "1d8+4 radiant",
+    "abilities": "Turn Undead (recharge 5-6): each undead within 30 ft must save or flee."
   }
 }`;
 
@@ -51,7 +55,7 @@ const ENCOUNTER_EXAMPLE = `{
     ],
     "combatants": [
       { "name": "Aerin", "initiative": 18 },
-      { "name": "Grick", "type": "monster", "maxHp": 27, "ac": 14, "initiative": 10 }
+      { "name": "Grick", "type": "monster", "maxHp": 27, "ac": 14, "initiative": 10, "attacks": 1, "toHit": "+5", "damage": "2d6+3 piercing", "abilities": "Camouflage: has advantage on Stealth checks in rocky terrain." }
     ]
   }
 }`;
@@ -108,7 +112,7 @@ Output ONLY a single JSON code block (no commentary) in exactly this shape:
         ],
         "combatants": [
           { "name": "<one of my player characters>", "initiative": 0 },
-          { "name": "<monster>", "type": "monster", "maxHp": 0, "ac": 0, "initiative": 0 }
+          { "name": "<monster>", "type": "monster", "maxHp": 0, "ac": 0, "initiative": 0, "attacks": 0, "toHit": "+0", "damage": "0d0+0 type", "abilities": "<short special ability description, if any>" }
         ]
       }
     ]
@@ -125,6 +129,10 @@ Rules:
   no stat block — they already exist in my roster.
 - Every monster or NPC that is not one of my players MUST include a stat block with
   at least "maxHp" (add "type" and "ac" too where you can).
+- Give every monster/NPC combatant "attacks" (number per turn), "toHit"
+  (e.g. "+5"), and "damage" (e.g. "1d8+3 slashing") so I can run it quickly
+  at the table. Include "abilities" for anything with a notable trait or
+  special action. Skip these four fields entirely for player characters.
 - For several identical monsters, list them separately with distinct names
   (e.g. "Goblin 1", "Goblin 2").
 - "initiative" is optional — leave it out if I should roll at the table.
@@ -242,8 +250,48 @@ export default function FormatsPage() {
             <td>number</td>
             <td>Optional on a combatant; defaults to 0 if omitted.</td>
           </tr>
+          <tr>
+            <td>
+              <code>attacks</code>
+            </td>
+            <td>number &gt; 0</td>
+            <td>
+              Optional. Number of attacks per turn — quick reference for
+              running the creature.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>toHit</code>
+            </td>
+            <td>string</td>
+            <td>
+              Optional. Freeform, e.g. <code>"+5"</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>damage</code>
+            </td>
+            <td>string</td>
+            <td>
+              Optional. Freeform, e.g. <code>"1d8+3 slashing"</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>abilities</code>
+            </td>
+            <td>string</td>
+            <td>Optional. Special abilities or traits, freeform.</td>
+          </tr>
         </tbody>
       </table>
+      <p>
+        <code>attacks</code>, <code>toHit</code>, <code>damage</code>, and{" "}
+        <code>abilities</code> are meant for monsters/NPCs you need to run in a
+        fight — the app doesn&rsquo;t show them for player characters.
+      </p>
 
       <h2>Session</h2>
       <p>

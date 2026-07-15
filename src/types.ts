@@ -29,6 +29,17 @@ export interface Character {
   /** Only meaningful for type "rival". */
   mood: MoodLabel | null;
   moodHistory: MoodEvent[];
+  /**
+   * Quick-reference combat stats for running this creature in a fight.
+   * Only meaningful for non-"pc" types.
+   */
+  attacks: number | null;
+  /** Free text, e.g. "+5". */
+  toHit: string;
+  /** Free text, e.g. "1d8+3 slashing". */
+  damage: string;
+  /** Special abilities / traits, freeform. */
+  abilities: string;
 }
 
 /**

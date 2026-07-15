@@ -3,7 +3,9 @@ import type { Character } from "../types";
 import { CHARACTER_TYPE_LABELS, MOOD_DISPLAY, MOOD_LABELS } from "../constants";
 import { useStore } from "../store";
 import ExportButton from "./ExportButton";
+import CombatStatsFields from "./CombatStatsFields";
 import { characterToFile } from "../io/exporters";
+import { formatCombatStatLine } from "../combatStats";
 
 export default function CharacterRow({ character }: { character: Character }) {
   const updateCharacter = useStore((s) => s.updateCharacter);
@@ -15,11 +17,20 @@ export default function CharacterRow({ character }: { character: Character }) {
   const [maxHp, setMaxHp] = useState(String(character.maxHp));
   const [ac, setAc] = useState(character.ac === null ? "" : String(character.ac));
   const [notes, setNotes] = useState(character.notes);
+  const [attacks, setAttacks] = useState(
+    character.attacks === null ? "" : String(character.attacks),
+  );
+  const [toHit, setToHit] = useState(character.toHit);
+  const [damage, setDamage] = useState(character.damage);
+  const [abilities, setAbilities] = useState(character.abilities);
 
   const [showMoodForm, setShowMoodForm] = useState(false);
   const [showMoodHistory, setShowMoodHistory] = useState(false);
   const [moodLabel, setMoodLabel] = useState(character.mood ?? "neutral");
   const [moodNote, setMoodNote] = useState("");
+
+  const isPc = character.type === "pc";
+  const statLine = formatCombatStatLine(character);
 
   function saveEdit() {
     const parsedMaxHp = Math.max(1, Number(maxHp) || character.maxHp);
@@ -28,6 +39,12 @@ export default function CharacterRow({ character }: { character: Character }) {
       maxHp: parsedMaxHp,
       ac: ac.trim() === "" ? null : Number(ac),
       notes,
+      ...(!isPc && {
+        attacks: attacks.trim() === "" ? null : Number(attacks),
+        toHit,
+        damage,
+        abilities,
+      }),
     });
     setEditing(false);
   }
@@ -65,6 +82,18 @@ export default function CharacterRow({ character }: { character: Character }) {
           placeholder="Notes"
           rows={2}
         />
+        {!isPc && (
+          <CombatStatsFields
+            attacks={attacks}
+            setAttacks={setAttacks}
+            toHit={toHit}
+            setToHit={setToHit}
+            damage={damage}
+            setDamage={setDamage}
+            abilities={abilities}
+            setAbilities={setAbilities}
+          />
+        )}
         <div className="row">
           <button type="button" onClick={saveEdit}>
             Save
@@ -124,6 +153,15 @@ export default function CharacterRow({ character }: { character: Character }) {
         </span>
         {character.ac !== null && <span>AC: {character.ac}</span>}
       </div>
+
+      {statLine && (
+        <div className="row stats combat-stat-line">
+          <span>⚔ {statLine}</span>
+        </div>
+      )}
+      {!isPc && character.abilities && (
+        <p className="abilities-text">{character.abilities}</p>
+      )}
 
       {character.notes && <p className="notes">{character.notes}</p>}
 

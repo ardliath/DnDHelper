@@ -74,6 +74,10 @@ function makeRosterCharacter(
     isTemporary: false,
     mood: spec.type === "rival" ? (spec.mood ?? "neutral") : null,
     moodHistory: [],
+    attacks: spec.attacks ?? null,
+    toHit: spec.toHit ?? "",
+    damage: spec.damage ?? "",
+    abilities: spec.abilities ?? "",
   };
 }
 
@@ -94,6 +98,10 @@ function makeTempCombatant(
     isTemporary: true,
     mood: null,
     moodHistory: [],
+    attacks: spec.attacks ?? null,
+    toHit: spec.toHit ?? "",
+    damage: spec.damage ?? "",
+    abilities: spec.abilities ?? "",
   };
 }
 
