@@ -331,11 +331,32 @@ export default function FormatsPage() {
       <h2>Campaign</h2>
       <p>
         A full campaign export bundles the roster plus every session and
-        encounter. Importing one creates a brand-new campaign. Note that exports
-        reset HP to full and don&rsquo;t preserve in-progress combat state
-        (current round / whose turn) — they capture your setup, not a live
-        fight.
+        encounter. Importing one creates a brand-new campaign.
       </p>
+
+      <h2>What isn&rsquo;t included</h2>
+      <p>
+        Every export (character, encounter, session, or campaign) captures your{" "}
+        <em>setup</em>, not a live moment. Specifically:
+      </p>
+      <ul>
+        <li>
+          HP resets to full and an imported encounter always starts fresh at{" "}
+          <code>create</code> — its live run-state (round number, whose turn it
+          is, status) is never carried over, even if you export an encounter
+          that&rsquo;s mid-fight or closed.
+        </li>
+        <li>
+          The combat log (round-by-round damage/heal events) isn&rsquo;t part of
+          this format at all — that&rsquo;s what &ldquo;Download session
+          log&rdquo;/&ldquo;Download campaign log&rdquo; are for, a separate
+          Markdown export meant for reading, not re-importing.
+        </li>
+        <li>
+          A rival&rsquo;s current <code>mood</code> is included, but their mood{" "}
+          <em>history</em> (the timestamped log of what shifted it) is not.
+        </li>
+      </ul>
 
       <h2>Designing a session with an AI</h2>
       <p>
