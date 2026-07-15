@@ -23,6 +23,22 @@ export function downloadJson(baseName: string, data: unknown): void {
   URL.revokeObjectURL(url);
 }
 
+export function downloadText(
+  baseName: string,
+  text: string,
+  extension = "md",
+): void {
+  const blob = new Blob([text], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${slugify(baseName)}.${extension}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export function readFileText(file: File): Promise<string> {
   return file.text();
 }

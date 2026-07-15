@@ -5,8 +5,10 @@ import ExportButton from "../components/ExportButton";
 import ImportPanel from "../components/ImportPanel";
 import NoteBlocks from "../components/NoteBlocks";
 import { noPlan, planEncounterImport } from "../io/apply";
+import { downloadText } from "../io/files";
 import { encounterToFile, sessionToFile } from "../io/exporters";
 import type { AnyFile } from "../io/formats";
+import { sessionToMarkdown } from "../io/narrative";
 import type { Character } from "../types";
 
 export default function SessionPage() {
@@ -168,6 +170,16 @@ export default function SessionPage() {
             filename={`session-${session.name}`}
             build={() => sessionToFile(session, encounters, charactersById)}
           />
+          <button
+            type="button"
+            className="ghost small"
+            title="A readable Markdown digest of read-aloud text, DM notes, and the combat log — for turning into a story, not for re-importing"
+            onClick={() =>
+              downloadText(`session-log-${session.name}`, sessionToMarkdown(session, encounters))
+            }
+          >
+            Download session log
+          </button>
         </div>
       </section>
     </div>

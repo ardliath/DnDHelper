@@ -11,8 +11,10 @@ import {
   planCharacterImport,
   planSessionImport,
 } from "../io/apply";
+import { downloadText } from "../io/files";
 import { campaignToFile, sessionToFile } from "../io/exporters";
 import type { AnyFile } from "../io/formats";
+import { campaignToMarkdown } from "../io/narrative";
 import type { Character, Encounter } from "../types";
 
 export default function CampaignPage() {
@@ -68,6 +70,10 @@ export default function CampaignPage() {
 
   function encountersForSession(sessionId: string): Encounter[] {
     return allEncounters.filter((e) => e.sessionId === sessionId);
+  }
+
+  function encountersBySession(): Map<string, Encounter[]> {
+    return new Map(sessions.map((sess) => [sess.id, encountersForSession(sess.id)]));
   }
 
   return (
@@ -164,22 +170,29 @@ export default function CampaignPage() {
             className="ghost small"
             label="Export whole campaign"
             filename={`campaign-${campaign.name}`}
-            build={() => {
-              const encountersBySession = new Map(
-                sessions.map((sess) => [
-                  sess.id,
-                  encountersForSession(sess.id),
-                ]),
-              );
-              return campaignToFile(
+            build={() =>
+              campaignToFile(
                 campaign.name,
                 characters,
                 sessions,
-                encountersBySession,
+                encountersBySession(),
                 charactersById,
-              );
-            }}
+              )
+            }
           />
+          <button
+            type="button"
+            className="ghost small"
+            title="A readable Markdown digest of every session's read-aloud text, DM notes, and combat logs — for turning into a story, not for re-importing"
+            onClick={() =>
+              downloadText(
+                `campaign-log-${campaign.name}`,
+                campaignToMarkdown(campaign, sessions, encountersBySession()),
+              )
+            }
+          >
+            Download campaign log
+          </button>
           <Link to="/formats" className="back-link">
             Format guide →
           </Link>
