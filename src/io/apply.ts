@@ -2,9 +2,11 @@ import type {
   Campaign,
   Character,
   Encounter,
+  NoteBlock,
   Session,
 } from "../types";
 import type {
+  BlockSpec,
   CampaignSpec,
   CharacterSpec,
   CombatantSpec,
@@ -20,6 +22,9 @@ function now(): string {
 }
 function norm(name: string): string {
   return name.trim().toLowerCase();
+}
+function notesFromSpec(specs: BlockSpec[] | undefined): NoteBlock[] {
+  return (specs ?? []).map((b) => ({ id: id(), kind: b.kind, text: b.text }));
 }
 
 /**
@@ -228,6 +233,7 @@ export function planSessionImport(
     id: id(),
     campaignId,
     name: spec.name,
+    notes: notesFromSpec(spec.notes),
     createdAt: now(),
   };
   for (const encSpec of spec.encounters ?? []) {
@@ -264,6 +270,7 @@ export function planCampaignImport(spec: CampaignSpec): ImportPlan {
       id: id(),
       campaignId: campaign.id,
       name: sessSpec.name,
+      notes: notesFromSpec(sessSpec.notes),
       createdAt: now(),
     };
     // A campaign's session may also declare its own roster additions.

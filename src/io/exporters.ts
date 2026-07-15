@@ -1,6 +1,7 @@
-import type { Character, Encounter, Session } from "../types";
+import type { Character, Encounter, NoteBlock, Session } from "../types";
 import {
   FORMAT_VERSION,
+  type BlockSpec,
   type CampaignFile,
   type CharacterFile,
   type CharacterSpec,
@@ -9,6 +10,11 @@ import {
   type EncounterSpec,
   type SessionFile,
 } from "./formats";
+
+function notesToSpec(notes: NoteBlock[]): BlockSpec[] | undefined {
+  if (notes.length === 0) return undefined;
+  return notes.map((n) => ({ kind: n.kind, text: n.text }));
+}
 
 function characterToSpec(c: Character): CharacterSpec {
   const spec: CharacterSpec = {
@@ -101,6 +107,7 @@ export function sessionToFile(
     session: {
       name: session.name,
       roster: referencedRoster(encounters, charactersById),
+      notes: notesToSpec(session.notes),
       encounters: encounters.map((e) => encounterToSpec(e, charactersById)),
     },
   };
@@ -123,6 +130,7 @@ export function campaignToFile(
         const encounters = encountersBySession.get(sess.id) ?? [];
         return {
           name: sess.name,
+          notes: notesToSpec(sess.notes),
           encounters: encounters.map((e) => encounterToSpec(e, charactersById)),
         };
       }),

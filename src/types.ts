@@ -46,12 +46,15 @@ export interface TurnEntry {
   initiative: number;
 }
 
-/** A paragraph of scene text: player-facing read-aloud, or a private DM note. */
-export type EncounterBlockKind = "read-aloud" | "note";
+/**
+ * A freeform paragraph: player-facing read-aloud text, or a private DM note.
+ * Used both for an encounter's scene text and a session's journal.
+ */
+export type NoteKind = "read-aloud" | "note";
 
-export interface EncounterBlock {
+export interface NoteBlock {
   id: string;
-  kind: EncounterBlockKind;
+  kind: NoteKind;
   text: string;
 }
 
@@ -76,7 +79,7 @@ export interface Encounter {
   currentTurnIndex: number;
   turnOrder: TurnEntry[];
   /** Ordered scene paragraphs (read-aloud text and DM notes). */
-  blocks: EncounterBlock[];
+  blocks: NoteBlock[];
   /** Chronological log of what happened during "run", for the "closed" recap. */
   events: EncounterEvent[];
   createdAt: string;
@@ -86,6 +89,8 @@ export interface Session {
   id: string;
   campaignId: string;
   name: string;
+  /** Freeform journal — exploration, travel, roleplay; not tied to any encounter. */
+  notes: NoteBlock[];
   createdAt: string;
 }
 

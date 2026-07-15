@@ -5,11 +5,11 @@ import type {
   Character,
   CharacterType,
   Encounter,
-  EncounterBlockKind,
   EncounterEvent,
   EncounterEventKind,
   EncounterStatus,
   MoodLabel,
+  NoteKind,
   Session,
 } from "./types";
 import type { ImportPlan } from "./io/apply";
@@ -69,6 +69,20 @@ interface State {
   addSession: (campaignId: string, name: string) => Session;
   renameSession: (sessionId: string, name: string) => void;
   deleteSession: (sessionId: string) => void;
+
+  // Session journal (freeform notes, not tied to any encounter)
+  addSessionNote: (sessionId: string, kind: NoteKind, text: string) => void;
+  updateSessionNote: (
+    sessionId: string,
+    noteId: string,
+    data: { kind?: NoteKind; text?: string },
+  ) => void;
+  removeSessionNote: (sessionId: string, noteId: string) => void;
+  moveSessionNote: (
+    sessionId: string,
+    noteId: string,
+    direction: "up" | "down",
+  ) => void;
 
   // Characters (roster)
   addCharacter: (
@@ -148,13 +162,13 @@ interface State {
   // Encounter scene blocks
   addEncounterBlock: (
     encounterId: string,
-    kind: EncounterBlockKind,
+    kind: NoteKind,
     text: string,
   ) => void;
   updateEncounterBlock: (
     encounterId: string,
     blockId: string,
-    data: { kind?: EncounterBlockKind; text?: string },
+    data: { kind?: NoteKind; text?: string },
   ) => void;
   removeEncounterBlock: (encounterId: string, blockId: string) => void;
   moveEncounterBlock: (
@@ -207,7 +221,13 @@ export const useStore = create<State>()(
       },
 
       addSession: (campaignId, name) => {
-        const session: Session = { id: id(), campaignId, name, createdAt: now() };
+        const session: Session = {
+          id: id(),
+          campaignId,
+          name,
+          notes: [],
+          createdAt: now(),
+        };
         set((s) => ({ sessions: [...s.sessions, session] }));
         return session;
       },
@@ -241,6 +261,61 @@ export const useStore = create<State>()(
           characters: s.characters.filter(
             (c) => !orphanedTempIds.includes(c.id),
           ),
+        }));
+      },
+
+      addSessionNote: (sessionId, kind, text) => {
+        const trimmed = text.trim();
+        if (trimmed === "") return;
+        set((s) => ({
+          sessions: s.sessions.map((sess) =>
+            sess.id === sessionId
+              ? {
+                  ...sess,
+                  notes: [...sess.notes, { id: id(), kind, text: trimmed }],
+                }
+              : sess,
+          ),
+        }));
+      },
+
+      updateSessionNote: (sessionId, noteId, data) => {
+        set((s) => ({
+          sessions: s.sessions.map((sess) =>
+            sess.id === sessionId
+              ? {
+                  ...sess,
+                  notes: sess.notes.map((n) =>
+                    n.id === noteId ? { ...n, ...data } : n,
+                  ),
+                }
+              : sess,
+          ),
+        }));
+      },
+
+      removeSessionNote: (sessionId, noteId) => {
+        set((s) => ({
+          sessions: s.sessions.map((sess) =>
+            sess.id === sessionId
+              ? { ...sess, notes: sess.notes.filter((n) => n.id !== noteId) }
+              : sess,
+          ),
+        }));
+      },
+
+      moveSessionNote: (sessionId, noteId, direction) => {
+        set((s) => ({
+          sessions: s.sessions.map((sess) => {
+            if (sess.id !== sessionId) return sess;
+            const index = sess.notes.findIndex((n) => n.id === noteId);
+            if (index === -1) return sess;
+            const target = direction === "up" ? index - 1 : index + 1;
+            if (target < 0 || target >= sess.notes.length) return sess;
+            const notes = [...sess.notes];
+            [notes[index], notes[target]] = [notes[target], notes[index]];
+            return { ...sess, notes };
+          }),
         }));
       },
 
@@ -679,7 +754,7 @@ export const useStore = create<State>()(
     }),
     {
       name: "dnd-helper-storage",
-      version: 4,
+      version: 5,
       migrate: (persistedState, version) => {
         const state = persistedState as {
           campaigns?: Campaign[];
@@ -702,6 +777,7 @@ export const useStore = create<State>()(
                 id: id(),
                 campaignId: e.campaignId,
                 name: "Session 1",
+                notes: [],
                 createdAt: e.createdAt,
               };
               sessionByCampaign.set(e.campaignId, session);
@@ -736,6 +812,14 @@ export const useStore = create<State>()(
             ...e,
             status: statusMap[e.status] ?? (e.status as EncounterStatus),
             events: (e.events as EncounterEvent[] | undefined) ?? [],
+          }));
+        }
+        if (version < 5) {
+          // Sessions gained their own freeform journal, separate from any
+          // one encounter's scene text.
+          state.sessions = (state.sessions ?? []).map((sess) => ({
+            ...sess,
+            notes: sess.notes ?? [],
           }));
         }
         return state;

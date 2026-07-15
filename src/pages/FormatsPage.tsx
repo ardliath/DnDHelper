@@ -64,6 +64,10 @@ const SESSION_EXAMPLE = `{
     "roster": [
       { "name": "Prophetess Ophelia", "type": "rival", "maxHp": 40, "ac": 15, "mood": "unfriendly" }
     ],
+    "notes": [
+      { "kind": "read-aloud", "text": "The road north climbs steadily out of the valley, the trees thinning to bare rock." },
+      { "kind": "note", "text": "If asked, a passing merchant mentions goblin sign near the steps." }
+    ],
     "encounters": [
       {
         "name": "Ambush at the Sunrise Steps",
@@ -91,6 +95,10 @@ Output ONLY a single JSON code block (no commentary) in exactly this shape:
     "roster": [
       { "name": "<recurring NPC>", "type": "rival|monster|other", "maxHp": 0, "ac": 0, "mood": "hostile|unfriendly|neutral|friendly|allied" }
     ],
+    "notes": [
+      { "kind": "read-aloud", "text": "<narration for travel/exploration between encounters>" },
+      { "kind": "note", "text": "<private DM prep for the journey>" }
+    ],
     "encounters": [
       {
         "name": "<encounter name>",
@@ -108,9 +116,11 @@ Output ONLY a single JSON code block (no commentary) in exactly this shape:
 }
 
 Rules:
-- Use "blocks" for scene text: "read-aloud" for narration read to players,
-  "note" for private DM prep. Both are optional; add as many as you like.
+- Use "blocks"/"notes" for scene text: "read-aloud" for narration read to
+  players, "note" for private DM prep. Both are optional; add as many as you like.
 - An encounter can be pure scene-setting with "blocks" and no "combatants".
+- A session can be pure exploration/travel too — put everything in the
+  session's "notes" and use an empty or omitted "encounters" list.
 - My player characters are: <LIST YOUR PCs HERE>. Reference them by name only, with
   no stat block — they already exist in my roster.
 - Every monster or NPC that is not one of my players MUST include a stat block with
@@ -238,8 +248,17 @@ export default function FormatsPage() {
       <h2>Session</h2>
       <p>
         The main unit for authoring. A session has an optional <code>roster</code>{" "}
-        (recurring NPCs) and a list of <code>encounters</code>, each with{" "}
-        <code>combatants</code>. Import a session from a campaign page.
+        (recurring NPCs), an optional <code>notes</code> journal, and a list of{" "}
+        <code>encounters</code>, each with <code>combatants</code>. Import a
+        session from a campaign page.
+      </p>
+      <p>
+        <code>notes</code> is a freeform journal for anything that isn&rsquo;t
+        combat — travel, exploration, roleplay, downtime. It uses the same block
+        shape as an encounter&rsquo;s <code>blocks</code> (<code>kind</code> of{" "}
+        <code>read-aloud</code> or <code>note</code>, plus <code>text</code>), so
+        you can describe a session that&rsquo;s pure journey with no{" "}
+        <code>encounters</code> at all.
       </p>
       <CodeBlock code={SESSION_EXAMPLE} />
 

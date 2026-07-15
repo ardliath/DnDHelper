@@ -4,7 +4,7 @@ import { useStore } from "../store";
 import AddFromRoster from "../components/AddFromRoster";
 import AddOneOffForm from "../components/AddOneOffForm";
 import CombatantRow from "../components/CombatantRow";
-import EncounterBlocks from "../components/EncounterBlocks";
+import NoteBlocks from "../components/NoteBlocks";
 import EncounterEventLog from "../components/EncounterEventLog";
 
 export default function EncounterPage() {
@@ -24,6 +24,10 @@ export default function EncounterPage() {
   const prevTurn = useStore((s) => s.prevTurn);
   const endEncounter = useStore((s) => s.endEncounter);
   const reopenEncounter = useStore((s) => s.reopenEncounter);
+  const addEncounterBlock = useStore((s) => s.addEncounterBlock);
+  const updateEncounterBlock = useStore((s) => s.updateEncounterBlock);
+  const removeEncounterBlock = useStore((s) => s.removeEncounterBlock);
+  const moveEncounterBlock = useStore((s) => s.moveEncounterBlock);
 
   const rosterCharacters = useMemo(
     () =>
@@ -70,10 +74,14 @@ export default function EncounterPage() {
         {(isRun || isClosed) && <span>Round {encounter.round}</span>}
       </div>
 
-      <EncounterBlocks
-        encounterId={encounterId}
+      <NoteBlocks
+        heading="Scene"
         blocks={encounter.blocks}
         readOnly={isClosed}
+        onAdd={(kind, text) => addEncounterBlock(encounterId, kind, text)}
+        onUpdate={(id, data) => updateEncounterBlock(encounterId, id, data)}
+        onRemove={(id) => removeEncounterBlock(encounterId, id)}
+        onMove={(id, direction) => moveEncounterBlock(encounterId, id, direction)}
       />
 
       {isCreate && (

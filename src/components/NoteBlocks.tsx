@@ -1,37 +1,36 @@
 import { useState } from "react";
-import type { EncounterBlock, EncounterBlockKind } from "../types";
-import { useStore } from "../store";
+import type { NoteBlock, NoteKind } from "../types";
 
-const KIND_LABEL: Record<EncounterBlockKind, string> = {
+const KIND_LABEL: Record<NoteKind, string> = {
   "read-aloud": "Read-aloud",
   note: "DM note",
 };
 
 function BlockRow({
   block,
-  encounterId,
   isFirst,
   isLast,
   readOnly,
+  onUpdate,
+  onRemove,
+  onMove,
 }: {
-  block: EncounterBlock;
-  encounterId: string;
+  block: NoteBlock;
   isFirst: boolean;
   isLast: boolean;
   readOnly: boolean;
+  onUpdate: (id: string, data: { kind?: NoteKind; text?: string }) => void;
+  onRemove: (id: string) => void;
+  onMove: (id: string, direction: "up" | "down") => void;
 }) {
-  const updateEncounterBlock = useStore((s) => s.updateEncounterBlock);
-  const removeEncounterBlock = useStore((s) => s.removeEncounterBlock);
-  const moveEncounterBlock = useStore((s) => s.moveEncounterBlock);
-
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(block.text);
-  const [kind, setKind] = useState<EncounterBlockKind>(block.kind);
+  const [kind, setKind] = useState<NoteKind>(block.kind);
 
   function save() {
     const trimmed = text.trim();
     if (trimmed === "") return;
-    updateEncounterBlock(encounterId, block.id, { text: trimmed, kind });
+    onUpdate(block.id, { text: trimmed, kind });
     setEditing(false);
   }
 
@@ -39,19 +38,12 @@ function BlockRow({
     return (
       <li className={`card scene-block block-${block.kind}`}>
         <div className="row wrap">
-          <select
-            value={kind}
-            onChange={(e) => setKind(e.target.value as EncounterBlockKind)}
-          >
+          <select value={kind} onChange={(e) => setKind(e.target.value as NoteKind)}>
             <option value="read-aloud">Read-aloud</option>
             <option value="note">DM note</option>
           </select>
         </div>
-        <textarea
-          rows={4}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
+        <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} />
         <div className="row">
           <button type="button" onClick={save}>
             Save
@@ -83,7 +75,7 @@ function BlockRow({
               className="ghost small"
               disabled={isFirst}
               title="Move up"
-              onClick={() => moveEncounterBlock(encounterId, block.id, "up")}
+              onClick={() => onMove(block.id, "up")}
             >
               ↑
             </button>
@@ -92,21 +84,17 @@ function BlockRow({
               className="ghost small"
               disabled={isLast}
               title="Move down"
-              onClick={() => moveEncounterBlock(encounterId, block.id, "down")}
+              onClick={() => onMove(block.id, "down")}
             >
               ↓
             </button>
-            <button
-              type="button"
-              className="ghost small"
-              onClick={() => setEditing(true)}
-            >
+            <button type="button" className="ghost small" onClick={() => setEditing(true)}>
               Edit
             </button>
             <button
               type="button"
               className="danger small"
-              onClick={() => removeEncounterBlock(encounterId, block.id)}
+              onClick={() => onRemove(block.id)}
             >
               Delete
             </button>
@@ -118,24 +106,31 @@ function BlockRow({
   );
 }
 
-export default function EncounterBlocks({
-  encounterId,
+export default function NoteBlocks({
+  heading = "Scene",
   blocks,
   readOnly = false,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onMove,
 }: {
-  encounterId: string;
-  blocks: EncounterBlock[];
+  heading?: string;
+  blocks: NoteBlock[];
   readOnly?: boolean;
+  onAdd: (kind: NoteKind, text: string) => void;
+  onUpdate: (id: string, data: { kind?: NoteKind; text?: string }) => void;
+  onRemove: (id: string) => void;
+  onMove: (id: string, direction: "up" | "down") => void;
 }) {
-  const addEncounterBlock = useStore((s) => s.addEncounterBlock);
   const [adding, setAdding] = useState(false);
-  const [kind, setKind] = useState<EncounterBlockKind>("read-aloud");
+  const [kind, setKind] = useState<NoteKind>("read-aloud");
   const [text, setText] = useState("");
 
   function add() {
     const trimmed = text.trim();
     if (trimmed === "") return;
-    addEncounterBlock(encounterId, kind, trimmed);
+    onAdd(kind, trimmed);
     setText("");
     setAdding(false);
   }
@@ -144,7 +139,7 @@ export default function EncounterBlocks({
 
   return (
     <section>
-      <h2>Scene</h2>
+      <h2>{heading}</h2>
 
       {blocks.length > 0 && (
         <ul className="scene-block-list">
@@ -152,10 +147,12 @@ export default function EncounterBlocks({
             <BlockRow
               key={b.id}
               block={b}
-              encounterId={encounterId}
               isFirst={i === 0}
               isLast={i === blocks.length - 1}
               readOnly={readOnly}
+              onUpdate={onUpdate}
+              onRemove={onRemove}
+              onMove={onMove}
             />
           ))}
         </ul>
@@ -165,10 +162,7 @@ export default function EncounterBlocks({
         (adding ? (
           <div className="card">
             <div className="row wrap">
-              <select
-                value={kind}
-                onChange={(e) => setKind(e.target.value as EncounterBlockKind)}
-              >
+              <select value={kind} onChange={(e) => setKind(e.target.value as NoteKind)}>
                 <option value="read-aloud">Read-aloud</option>
                 <option value="note">DM note</option>
               </select>

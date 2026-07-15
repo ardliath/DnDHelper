@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useStore } from "../store";
 import ExportButton from "../components/ExportButton";
 import ImportPanel from "../components/ImportPanel";
+import NoteBlocks from "../components/NoteBlocks";
 import { noPlan, planEncounterImport } from "../io/apply";
 import { encounterToFile, sessionToFile } from "../io/exporters";
 import type { AnyFile } from "../io/formats";
@@ -29,6 +30,10 @@ export default function SessionPage() {
   const addEncounter = useStore((s) => s.addEncounter);
   const deleteEncounter = useStore((s) => s.deleteEncounter);
   const moveEncounter = useStore((s) => s.moveEncounter);
+  const addSessionNote = useStore((s) => s.addSessionNote);
+  const updateSessionNote = useStore((s) => s.updateSessionNote);
+  const removeSessionNote = useStore((s) => s.removeSessionNote);
+  const moveSessionNote = useStore((s) => s.moveSessionNote);
 
   const [encounterName, setEncounterName] = useState("");
 
@@ -68,6 +73,15 @@ export default function SessionPage() {
         ← {campaign.name}
       </Link>
       <h1>{session.name}</h1>
+
+      <NoteBlocks
+        heading="Journal"
+        blocks={session.notes}
+        onAdd={(kind, text) => addSessionNote(sessionId, kind, text)}
+        onUpdate={(id, data) => updateSessionNote(sessionId, id, data)}
+        onRemove={(id) => removeSessionNote(sessionId, id)}
+        onMove={(id, direction) => moveSessionNote(sessionId, id, direction)}
+      />
 
       <section>
         <h2>Encounters</h2>

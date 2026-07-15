@@ -1,11 +1,11 @@
 import type {
   CharacterType,
-  EncounterBlockKind,
   MoodLabel,
+  NoteKind,
 } from "../types";
 import { CHARACTER_TYPE_ORDER, MOOD_LABELS } from "../constants";
 
-export const ENCOUNTER_BLOCK_KINDS: EncounterBlockKind[] = ["read-aloud", "note"];
+export const NOTE_KINDS: NoteKind[] = ["read-aloud", "note"];
 
 /**
  * On-disk JSON exchange formats for DnD Helper.
@@ -42,7 +42,7 @@ export interface CombatantSpec {
 }
 
 export interface BlockSpec {
-  kind: EncounterBlockKind;
+  kind: NoteKind;
   text: string;
 }
 
@@ -56,6 +56,8 @@ export interface SessionSpec {
   name: string;
   /** Characters to ensure exist in the campaign roster (recurring NPCs, PCs). */
   roster?: CharacterSpec[];
+  /** Freeform journal — exploration, travel, roleplay; not tied to any encounter. */
+  notes?: BlockSpec[];
   encounters?: EncounterSpec[];
 }
 
@@ -185,10 +187,8 @@ function validateBlockSpec(v: unknown, path: string, errors: string[]): void {
     errors.push(`${path} must be an object.`);
     return;
   }
-  if (!ENCOUNTER_BLOCK_KINDS.includes(v.kind as EncounterBlockKind)) {
-    errors.push(
-      `${path}.kind must be one of: ${ENCOUNTER_BLOCK_KINDS.join(", ")}.`,
-    );
+  if (!NOTE_KINDS.includes(v.kind as NoteKind)) {
+    errors.push(`${path}.kind must be one of: ${NOTE_KINDS.join(", ")}.`);
   }
   if (typeof v.text !== "string" || v.text.trim() === "") {
     errors.push(`${path}.text is required and must be a non-empty string.`);
@@ -255,6 +255,15 @@ function validateSessionSpec(
     errors.push(`${path}.name is required and must be a non-empty string.`);
   }
   validateRoster(v.roster, `${path}.roster`, errors);
+  if (v.notes !== undefined) {
+    if (!Array.isArray(v.notes)) {
+      errors.push(`${path}.notes must be an array.`);
+    } else {
+      v.notes.forEach((n, i) =>
+        validateBlockSpec(n, `${path}.notes[${i}]`, errors),
+      );
+    }
+  }
   if (v.encounters !== undefined) {
     if (!Array.isArray(v.encounters)) {
       errors.push(`${path}.encounters must be an array.`);
